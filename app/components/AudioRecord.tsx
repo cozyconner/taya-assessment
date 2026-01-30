@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const TEAL = {
   light: "rgb(94 234 212 / 0.4)",
@@ -8,13 +8,21 @@ const TEAL = {
   dark: "rgb(20 184 166)",
 };
 
-// 41b9ab9d69aef9b901a2265f388d1a1908aee1c8
-
 export default function AudioRecord() {
   const [isRecording, setIsRecording] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [transcription, setTranscription] = useState("");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (isExpanded) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isExpanded]);
 
   const handleToggle = () => {
     if (!isExpanded) {
@@ -48,21 +56,19 @@ export default function AudioRecord() {
 
   return (
     <div
-      className={`overflow-hidden transition-all duration-500 ease-out ${
-        isExpanded ? "fixed inset-0 z-10" : "relative"
-      }`}
+      className={`overflow-hidden transition-all duration-500 ease-out ${isExpanded ? "fixed inset-0 z-10" : "relative"
+        }`}
     >
       <div
-        className={`relative flex flex-col items-center justify-center transition-all duration-500 ease-out ${
-          isExpanded
-            ? "min-h-screen bg-[#5eead4]/30 backdrop-blur-xl"
-            : "min-h-0 py-8"
-        }`}
+        className={`relative flex flex-col items-center justify-center transition-all duration-500 ease-out ${isExpanded
+          ? "min-h-screen bg-[#5eead4]/30 backdrop-blur-md"
+          : "min-h-0 py-8"
+          }`}
         style={
           isExpanded
             ? {
-                background: `linear-gradient(180deg, ${TEAL.light} 0%, rgb(94 234 212 / 0.2) 50%, ${TEAL.mid} 100%)`,
-              }
+              background: `linear-gradient(180deg, ${TEAL.light} 0%, rgb(94 234 212 / 0.2) 50%, ${TEAL.mid} 100%)`,
+            }
             : undefined
         }
       >
@@ -134,7 +140,7 @@ export default function AudioRecord() {
             <div
               className="relative rounded-full p-1"
               style={{
-                background: `radial-gradient(circle, ${TEAL.light} 0%, transparent 70%)`,
+                background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
               }}
             >
               <button
