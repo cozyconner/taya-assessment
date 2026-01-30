@@ -23,9 +23,11 @@ export default function AudioRecord() {
   const [recordState, setRecordState] = useState<AudioRecordState>("idle");
   const [transcription, setTranscription] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
+  const [smoothedLevel, setSmoothedLevel] = useState(0);
   const [silenceWarning, setSilenceWarning] = useState<string | null>(null);
   const [recordError, setRecordError] = useState<string | null>(null);
 
+  const smoothedLevelRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -75,6 +77,8 @@ export default function AudioRecord() {
     }
     mediaRecorderRef.current = null;
     setAudioLevel(0);
+    setSmoothedLevel(0);
+    smoothedLevelRef.current = 0;
     setSilenceWarning(null);
   }, []);
 
@@ -101,6 +105,11 @@ export default function AudioRecord() {
       }
       const rms = Math.sqrt(sum / dataArray.length);
       setAudioLevel(rms);
+
+      const norm = Math.min(1, rms * 8);
+      const smoothed = 0.22 * norm + 0.78 * smoothedLevelRef.current;
+      smoothedLevelRef.current = smoothed;
+      setSmoothedLevel(smoothed);
 
       rmsHistoryRef.current.push(rms);
       if (rmsHistoryRef.current.length > 120) rmsHistoryRef.current.shift();
@@ -132,6 +141,8 @@ export default function AudioRecord() {
       setSilenceWarning(null);
       silenceStartRef.current = null;
       silenceAutoStopFiredRef.current = false;
+      smoothedLevelRef.current = 0;
+      setSmoothedLevel(0);
       rmsHistoryRef.current = [];
 
       try {
@@ -216,7 +227,8 @@ export default function AudioRecord() {
   }, [stopRecording]);
 
   const normalizedLevel = Math.min(1, audioLevel * 8);
-  const orbGlow = 12 + normalizedLevel * 24;
+  const displayLevel = recordState === "recording" ? smoothedLevel : normalizedLevel;
+  const orbGlow = 12 + displayLevel * 24;
   const isHearingYou = recordState === "recording" && audioLevel >= SPEECH_DETECTED_THRESHOLD;
 
   return (
@@ -289,13 +301,28 @@ export default function AudioRecord() {
               <p className="text-center text-sm font-medium text-teal-800/80">
                 Live transcription • Auto-stops after silence
               </p>
-              <div
-                className="relative rounded-full p-1 transition-shadow duration-75"
-                style={{
-                  background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
-                  boxShadow: recordState === "recording" ? `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}` : undefined,
-                }}
-              >
+              <div className="relative rounded-full p-1 w-20 h-20 flex items-center justify-center">
+                {recordState === "recording" && (
+                  <div
+                    className="absolute inset-0 rounded-full pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
+                      boxShadow: `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}`,
+                      transform: `scale(${1 + displayLevel * 0.25})`,
+                      transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out",
+                    }}
+                    aria-hidden
+                  />
+                )}
+                {recordState !== "recording" && (
+                  <div
+                    className="absolute inset-0 rounded-full pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
+                    }}
+                    aria-hidden
+                  />
+                )}
                 <button
                   type="button"
                   onClick={handleToggle}
@@ -329,9 +356,29 @@ export default function AudioRecord() {
               <div className="min-h-[4rem] max-w-md text-center">
                 {recordState === "error" && recordError ? (
                   <p className="text-lg leading-relaxed text-red-800">{recordError}</p>
+                ) : recordState === "uploading" ||
+                  recordState === "transcribing" ||
+                  recordState === "synthesizing" ? (
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="flex items-end justify-center gap-1.5 h-10" aria-hidden>
+                      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                        <span
+                          key={i}
+                          className="w-1.5 rounded-full bg-teal-500 animate-processing-bar origin-bottom"
+                          style={{
+                            height: "1.5rem",
+                            animationDelay: `${i * 0.1}s`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-sm font-medium text-teal-800/90">
+                      Processing your memory…
+                    </p>
+                  </div>
                 ) : (
                   <p className="text-lg leading-relaxed text-black">
-                    {transcription || (recordState === "recording" ? "Listening..." : "Processing...")}
+                    {transcription || (recordState === "recording" ? "Listening..." : "")}
                   </p>
                 )}
               </div>

@@ -82,3 +82,15 @@ export async function createMemoryCardFromAudio(
     return { ok: false, error: message };
   }
 }
+
+export type DeleteMemoryCardResult = { ok: true } | { ok: false; error: string };
+
+export async function deleteMemoryCard(id: string): Promise<DeleteMemoryCardResult> {
+  try {
+    await prisma.memoryCard.delete({ where: { id } });
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to delete";
+    return { ok: false, error: message };
+  }
+}
