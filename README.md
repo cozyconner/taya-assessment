@@ -105,23 +105,45 @@ A Next.js application that allows users to record audio notes and automatically 
 taya-assessment/
 ├── app/
 │   ├── actions/          # Server actions
+│   │   └── memory-card.actions.ts
 │   ├── api/              # API routes
+│   │   ├── memory-card/
+│   │   │   └── route.ts
+│   │   └── transcribe/
+│   │       └── route.ts
 │   ├── components/       # React components
+│   │   ├── AudioRecordButton.tsx
+│   │   ├── MemoryCard.tsx
+│   │   ├── MemoryCardDetailModal.tsx
+│   │   ├── MemoryCards.tsx
+│   │   └── MemoryCardTags.tsx
 │   ├── data/             # Mock data
+│   │   └── data.ts
+│   ├── globals.css
+│   ├── layout.tsx
 │   └── page.tsx          # Main page
 ├── lib/
+│   ├── const.ts         # Constants
 │   ├── db.ts            # Prisma client setup
-│   ├── env.ts           # Environment variable validation
 │   ├── prompts.ts       # LLM prompts
-│   ├── rate-limit.ts    # Rate limiting utility
 │   └── utils.ts         # Utility functions
 ├── services/            # Business logic services
-│   └── __tests__/       # Service tests
+│   ├── __tests__/       # Service tests
+│   ├── memory-card.service.ts
+│   └── transcribe.service.ts
 ├── stores/              # Zustand stores
+│   ├── useGlobalControls.ts
+│   └── useOptimisticMemoryCards.ts
 ├── types/               # TypeScript type definitions
-├── prisma/
-│   └── schema.prisma    # Database schema
-└── ui/                  # Reusable UI components
+│   └── types.ts
+├── ui/                  # Reusable UI components
+│   ├── MenuButton.tsx
+│   ├── Modal.tsx
+│   ├── Switch.tsx
+│   └── Tag.tsx
+└── prisma/
+    ├── migrations/      # Database migrations
+    └── schema.prisma    # Database schema
 ```
 
 ## Architecture
@@ -150,7 +172,7 @@ The application uses PostgreSQL with the following main models:
 
 ## Environment Variables
 
-All required environment variables are validated at startup. See `lib/env.ts` for details:
+Required environment variables:
 
 - `DATABASE_URL` - PostgreSQL connection string
 - `OPENAI_API_KEY` - OpenAI API key for memory card generation
