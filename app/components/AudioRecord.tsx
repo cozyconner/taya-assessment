@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createMemoryCardFromAudio } from "@/app/actions/memory-card.actions";
 import type { AudioRecordState } from "@/types/types";
 
 const TEAL = {
@@ -11,7 +13,7 @@ const TEAL = {
 
 /** RMS below this for SILENCE_DURATION_MS = silence detected */
 const RMS_SILENCE_THRESHOLD = 0.01;
-const SILENCE_DURATION_MS = 1500;
+const SILENCE_DURATION_MS = 3000;
 /** Overall average RMS below this = "very quiet" recording */
 const OVERALL_AVG_LOW_THRESHOLD = 0.008;
 /** RMS above this = "we're hearing you" */
@@ -34,6 +36,7 @@ export default function AudioRecord() {
   const rmsHistoryRef = useRef<number[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isRecordingRef = useRef(false);
+  const router = useRouter();
 
   const isExpanded = recordState !== "idle";
 
@@ -132,7 +135,7 @@ export default function AudioRecord() {
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) chunksRef.current.push(e.data);
         };
-        recorder.onstop = () => {
+        recorder.onstop = async () => {
           const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
           const avg =
             rmsHistoryRef.current.length > 0
@@ -141,8 +144,25 @@ export default function AudioRecord() {
           if (avg < OVERALL_AVG_LOW_THRESHOLD) {
             setSilenceWarning("Recording was very quiet. You may want to record again.");
           }
-          // TODO: upload blob, transcribe, etc.
-          console.log("Recording stopped, blob size:", blob.size, "overall avg RMS:", avg);
+
+          setRecordState("uploading");
+          setTranscription("Processing...");
+
+          const formData = new FormData();
+          formData.set("audio", blob, "recording.webm");
+
+          const result = await createMemoryCardFromAudio(formData);
+
+          if (result.ok) {
+            setRecordState("done");
+            setTranscription(result.card.title);
+            setSilenceWarning(null);
+            router.refresh();
+          } else {
+            setRecordState("error");
+            setRecordError(result.error);
+            setTranscription("");
+          }
         };
 
         recorder.start(100);
@@ -151,23 +171,6 @@ export default function AudioRecord() {
         setRecordState("recording");
 
         startLevelMeter(stream);
-
-        // Mock transcription for now
-        const words = [
-          "personal for a qu...",
-          "God, I love this walk.",
-          "Same route every",
-        ];
-        let i = 0;
-        intervalRef.current = setInterval(() => {
-          if (i < words.length) {
-            setTranscription((prev) => (prev ? `${prev} ${words[i]}` : words[i]));
-            i++;
-          } else if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        }, 1200);
       } catch (err) {
         isRecordingRef.current = false;
         setRecordError(
@@ -176,10 +179,19 @@ export default function AudioRecord() {
         setRecordState("idle");
       }
     } else {
-      isRecordingRef.current = false;
-      stopRecording();
-      setRecordState("idle");
-      setTranscription("");
+      if (recordState === "recording") {
+        isRecordingRef.current = false;
+        stopRecording();
+      } else if (recordState === "done" || recordState === "error") {
+        setRecordState("idle");
+        setTranscription("");
+        setRecordError(null);
+      } else {
+        isRecordingRef.current = false;
+        stopRecording();
+        setRecordState("idle");
+        setTranscription("");
+      }
     }
   }, [recordState, startLevelMeter, stopRecording]);
 
@@ -261,35 +273,52 @@ export default function AudioRecord() {
               <p className="text-center text-sm font-medium text-teal-800/80">
                 Live transcription • Auto-stops after silence
               </p>
-              <div
-                className="relative rounded-full p-1 transition-shadow duration-75"
-                style={{
-                  background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
-                  boxShadow: `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}`,
-                }}
+            <div
+              className="relative rounded-full p-1 transition-shadow duration-75"
+              style={{
+                background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
+                boxShadow: recordState === "recording" ? `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}` : undefined,
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleToggle}
+                disabled={recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"}
+                className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                aria-label={
+                  recordState === "recording"
+                    ? "Stop recording"
+                    : recordState === "done" || recordState === "error"
+                      ? "Done"
+                      : recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"
+                        ? "Processing"
+                        : "Record"
+                }
               >
-                <button
-                  type="button"
-                  onClick={handleToggle}
-                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95"
-                  aria-label={recordState === "recording" ? "Stop recording" : "Record"}
-                >
+                {recordState === "recording" ? (
                   <span className="flex gap-1">
                     <span className="h-6 w-1.5 rounded-full bg-white" />
                     <span className="h-6 w-1.5 rounded-full bg-white" />
                   </span>
-                </button>
-              </div>
+                ) : (
+                  <span className="h-5 w-5 rounded-full bg-white" />
+                )}
+              </button>
+            </div>
               {silenceWarning && (
                 <p className="max-w-sm text-center text-sm font-medium text-amber-800">
                   {silenceWarning}
                 </p>
               )}
-              <div className="min-h-[4rem] max-w-md text-center">
+            <div className="min-h-[4rem] max-w-md text-center">
+              {recordState === "error" && recordError ? (
+                <p className="text-lg leading-relaxed text-red-800">{recordError}</p>
+              ) : (
                 <p className="text-lg leading-relaxed text-black">
-                  {transcription || "Listening..."}
+                  {transcription || (recordState === "recording" ? "Listening..." : "Processing...")}
                 </p>
-              </div>
+              )}
+            </div>
             </div>
             {isHearingYou && (
               <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pb-8">

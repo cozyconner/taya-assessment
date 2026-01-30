@@ -1,5 +1,6 @@
 import type { MemoryCardDisplay } from "@/types/types";
 
+/** Kept for possible reuse (e.g. demos, fallback UI). Not used when loading from API. */
 export const MOCK_MEMORY_CARDS: MemoryCardDisplay[] = [
   {
     id: "1",

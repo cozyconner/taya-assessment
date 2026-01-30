@@ -1,6 +1,6 @@
 import AudioRecord from "./components/AudioRecord";
 import MemoryCard from "./components/MemoryCard";
-import { MOCK_MEMORY_CARDS } from "./data";
+import { getMemoryCards } from "./actions/memory-card.actions";
 import type { MemoryCardDisplay } from "@/types/types";
 
 function groupCardsByDate(cards: MemoryCardDisplay[]) {
@@ -31,8 +31,9 @@ function groupCardsByDate(cards: MemoryCardDisplay[]) {
   return groups;
 }
 
-export default function Home() {
-  const grouped = groupCardsByDate(MOCK_MEMORY_CARDS);
+export default async function TayaPage() {
+  const cards = await getMemoryCards();
+  const grouped = groupCardsByDate(cards);
 
   return (
     <div className="relative min-h-screen bg-[#f5f0e8] font-sans">

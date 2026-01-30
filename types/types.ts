@@ -5,7 +5,11 @@
  * - 2 neutral
  * - 2 negative
  */
-export { Mood } from "@prisma/client";
+import { Mood } from "@prisma/client";
+export { Mood };
+
+/** Mood enum values for Zod/validation; must stay in sync with Prisma Mood. */
+export const MOOD_VALUES = Object.values(Mood) as [string, ...string[]];
 
 /**
  * UI states for the audio recording flow.
