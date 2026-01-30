@@ -32,6 +32,28 @@ A Next.js application that allows users to record audio notes and automatically 
 - **Linting**: ESLint with Next.js config
 - **Package Manager**: pnpm (recommended)
 
+## AI Services
+
+This application leverages two AI services to transform audio recordings into structured memory cards:
+
+### Deepgram Nova-3 (Speech-to-Text)
+
+**Why Deepgram Nova-3:**
+- **High Accuracy**: Nova-3 is Deepgram's latest and most accurate speech recognition model, providing excellent transcription quality for natural speech
+- **Smart Formatting**: Built-in smart formatting automatically handles punctuation, capitalization, and speaker diarization
+- **Low Latency**: Fast API response times ensure a responsive user experience
+- **Developer-Friendly**: Simple REST API with clear error handling and straightforward integration
+
+### OpenAI GPT-4o-mini (Text-to-Structured Data)
+
+**Why GPT-4o-mini:**
+- **Cost-Effective**: The "mini" variant provides excellent performance at a fraction of the cost of larger models, making it ideal for production use
+- **Structured Output**: Reliable JSON mode ensures consistent, parseable responses that match our schema
+- **Context Understanding**: Strong at understanding context, tone, and extracting meaningful insights from transcripts
+- **Balanced Performance**: Offers the right balance between capability and cost for this use case, where we need structured extraction rather than creative generation
+
+Together, these services provide a cost-effective, accurate pipeline from raw audio to structured, actionable memory cards.
+
 ## Prerequisites
 
 - Node.js 18+ 
@@ -145,6 +167,28 @@ taya-assessment/
     ├── migrations/      # Database migrations
     └── schema.prisma    # Database schema
 ```
+
+## AI Services
+
+This application leverages two AI services to transform audio recordings into structured memory cards:
+
+### Deepgram Nova-3 (Speech-to-Text)
+
+**Why Deepgram Nova-3:**
+- **High Accuracy**: Nova-3 is Deepgram's latest and most accurate speech recognition model, providing excellent transcription quality for natural speech
+- **Smart Formatting**: Built-in smart formatting automatically handles punctuation, capitalization, and speaker diarization
+- **Low Latency**: Fast API response times ensure a responsive user experience
+- **Developer-Friendly**: Simple REST API with clear error handling and straightforward integration
+
+### OpenAI GPT-4o-mini (Text-to-Structured Data)
+
+**Why GPT-4o-mini:**
+- **Cost-Effective**: The "mini" variant provides excellent performance at a fraction of the cost of larger models, making it ideal for production use
+- **Structured Output**: Reliable JSON mode ensures consistent, parseable responses that match our schema
+- **Context Understanding**: Strong at understanding context, tone, and extracting meaningful insights from transcripts
+- **Balanced Performance**: Offers the right balance between capability and cost for this use case, where we need structured extraction rather than creative generation
+
+Together, these services provide a cost-effective, accurate pipeline from raw audio to structured, actionable memory cards.
 
 ## Architecture
 

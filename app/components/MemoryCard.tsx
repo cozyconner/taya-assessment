@@ -210,7 +210,7 @@ export default function MemoryCard({
       {showOverlay && (
         <div
           className={cn(
-            "absolute inset-0 z-10 rounded-2xl bg-white/35 backdrop-blur-md transition-opacity duration-300",
+            "absolute inset-0 z-10 rounded-2xl bg-white/35 backdrop-blur-sm transition-opacity duration-300",
             overlayVisible ? "opacity-100" : "pointer-events-none opacity-0"
           )}
           aria-hidden={!overlayVisible}
@@ -236,7 +236,7 @@ export default function MemoryCard({
                   className="h-10 w-10 animate-spin rounded-full border-2 border-white/80 border-t-teal-600"
                   aria-label="Loading"
                 />
-                <p className="text-xs font-medium text-stone-700">Processing…</p>
+                <p className="text-xs font-medium text-stone-700">Organizing your thoughts...</p>
               </div>
             )}
           </div>
