@@ -308,7 +308,7 @@ export default function AudioRecord() {
                     style={{
                       background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
                       boxShadow: `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}`,
-                      transform: `scale(${1 + displayLevel * 0.25})`,
+                      transform: `scale(${1 + displayLevel * 0.5})`,
                       transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out",
                     }}
                     aria-hidden
@@ -353,13 +353,13 @@ export default function AudioRecord() {
                   {silenceWarning}
                 </p>
               )}
-              <div className="min-h-[4rem] max-w-md text-center">
+              <div className="relative min-h-[5.5rem] w-full max-w-md">
                 {recordState === "error" && recordError ? (
-                  <p className="text-lg leading-relaxed text-red-800">{recordError}</p>
+                  <p className="text-center text-lg leading-relaxed text-red-800">{recordError}</p>
                 ) : recordState === "uploading" ||
                   recordState === "transcribing" ||
                   recordState === "synthesizing" ? (
-                  <div className="flex flex-col items-center gap-6">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-6" aria-hidden>
                     <div className="flex items-end justify-center gap-1.5 h-10" aria-hidden>
                       {[0, 1, 2, 3, 4, 5, 6].map((i) => (
                         <span
@@ -377,7 +377,7 @@ export default function AudioRecord() {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-lg leading-relaxed text-black">
+                  <p className="text-center text-lg leading-relaxed text-black">
                     {transcription || (recordState === "recording" ? "Listening..." : "")}
                   </p>
                 )}
