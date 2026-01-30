@@ -16,6 +16,21 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
     null
   );
 
+  function renderCardList(cards: MemoryCardDisplay[]) {
+    return (
+      <ul className="flex flex-col gap-3">
+        {cards.map((card) => (
+          <li key={card.id}>
+            <MemoryCard
+              card={card}
+              onOpenDetail={() => setSelectedCard(card)}
+            />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   return (
     <>
       <section className="relative z-0 px-4 pb-12">
@@ -30,16 +45,7 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
                 <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
                   {label}
                 </h3>
-                <ul className="flex flex-col gap-3">
-                  {cards.map((card) => (
-                    <li key={card.id}>
-                      <MemoryCard
-                        card={card}
-                        onOpenDetail={() => setSelectedCard(card)}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                {renderCardList(cards)}
               </div>
             ))}
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useState } from "react";
-import Tag from "@/app/components/Tag";
+import MemoryCardTags from "@/app/components/MemoryCardTags";
 import type { MemoryCardDisplay } from "@/types/types";
 
 const DURATION_MS = 200;
@@ -15,10 +15,6 @@ function formatTime(date: Date): string {
     minute: "2-digit",
     hour12: true,
   }).format(date);
-}
-
-function formatMood(mood: string): string {
-  return mood.charAt(0).toUpperCase() + mood.slice(1).toLowerCase();
 }
 
 type MemoryCardDetailProps = {
@@ -57,6 +53,16 @@ export default function MemoryCardDetail({ card, onClose }: MemoryCardDetailProp
 
   const backdropOpacity = isVisible && !isClosing ? "opacity-100" : "opacity-0";
   const panelOpacity = isVisible && !isClosing ? "opacity-100 scale-100" : "opacity-0 scale-95";
+
+  function renderActionItems(actionItems: string[]) {
+    return (
+      <ul className="mt-2 list-outside list-disc space-y-1 pl-4 pr-0 text-sm text-stone-700 [&_li::marker]:text-stone-500">
+        {actionItems.map((item, i) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <div
@@ -110,23 +116,18 @@ export default function MemoryCardDetail({ card, onClose }: MemoryCardDetailProp
           {card.transcript}
         </p>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Tag variant="teal">{formatMood(card.mood)}</Tag>
-          {card.categories.map((cat) => (
-            <Tag key={cat}>{cat}</Tag>
-          ))}
-        </div>
+        <MemoryCardTags
+          mood={card.mood}
+          categories={card.categories}
+          className="mt-4"
+        />
 
         {card.actionItems.length > 0 && (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
               Action items
             </h3>
-            <ul className="mt-2 list-outside list-disc space-y-1 pl-4 pr-0 text-sm text-stone-700 [&_li::marker]:text-stone-500">
-              {card.actionItems.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
+            {renderActionItems(card.actionItems)}
           </div>
         )}
       </div>

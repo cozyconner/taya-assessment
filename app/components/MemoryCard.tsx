@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMemoryCard } from "@/app/actions/memory-card.actions";
-import Tag from "@/app/components/Tag";
+import MemoryCardTags from "@/app/components/MemoryCardTags";
 import type { MemoryCardDisplay } from "@/types/types";
 
 const LONG_PRESS_MS = 800;
@@ -14,10 +14,6 @@ function formatTime(date: Date): string {
     minute: "2-digit",
     hour12: true,
   }).format(date);
-}
-
-function formatMood(mood: string): string {
-  return mood.charAt(0).toUpperCase() + mood.slice(1).toLowerCase();
 }
 
 type MemoryCardProps = {
@@ -135,13 +131,12 @@ export default function MemoryCard({ card, onOpenDetail }: MemoryCardProps) {
           {card.actionItems.length === 1 ? "action item" : "action items"}
         </p>
       )}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Tag variant="teal">{formatMood(card.mood)}</Tag>
-        {card.categories.length > 0 &&
-          card.categories.slice(0, 3).map((category) => (
-            <Tag key={category}>{category}</Tag>
-          ))}
-      </div>
+      <MemoryCardTags
+        mood={card.mood}
+        categories={card.categories}
+        maxCategories={3}
+        className="mt-3"
+      />
     </article>
   );
 }

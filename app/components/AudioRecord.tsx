@@ -370,7 +370,7 @@ export default function AudioRecord() {
                       ))}
                     </div>
                     <p className="text-sm font-medium text-teal-800/90">
-                      Processing your memory…
+                      Processing your memory...
                     </p>
                   </div>
                 ) : (
