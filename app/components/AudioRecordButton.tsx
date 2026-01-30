@@ -29,7 +29,7 @@ const SPEECH_DETECTED_THRESHOLD = 0.02;
 // If we auto-stop after 2000ms of silence, a clip of ~2750ms is almost certainly "no useful audio".
 const MAX_EMPTY_RECORDING_MS = 2000 + 750;
 
-export default function AudioRecord() {
+export default function AudioRecordButton() {
   const offlineMode = useGlobalControls((s) => s.offlineMode);
   const offlineModeRef = useRef(offlineMode);
   offlineModeRef.current = offlineMode;

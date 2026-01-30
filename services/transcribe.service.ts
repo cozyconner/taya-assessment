@@ -3,10 +3,10 @@
  * Used by API route and actions; testable in isolation.
  */
 
+import { MIN_AUDIO_BYTES } from "@/lib/const";
+
 const DEEPGRAM_BASE = "https://api.deepgram.com/v1/listen";
 const MIN_TRANSCRIPT_LENGTH = 2;
-// Server-side safety net: avoid paying Deepgram for near-empty uploads
-const MIN_AUDIO_BYTES = 30000;
 
 export interface TranscribeResult {
   transcript: string;

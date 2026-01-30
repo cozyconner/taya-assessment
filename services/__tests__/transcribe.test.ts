@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { transcribeAudio_service, isTranscriptTooShort_service } from "../transcribe.service";
+import { MIN_AUDIO_BYTES } from "../../lib/const";
 
 describe("transcribe", () => {
   beforeEach(() => {
@@ -24,7 +25,7 @@ describe("transcribe", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const result = await transcribeAudio_service(new ArrayBuffer(8), "audio/webm");
+      const result = await transcribeAudio_service(new ArrayBuffer(MIN_AUDIO_BYTES), "audio/webm");
 
       expect(result.transcript).toBe(mockTranscript);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -46,7 +47,7 @@ describe("transcribe", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const result = await transcribeAudio_service(new ArrayBuffer(8));
+      const result = await transcribeAudio_service(new ArrayBuffer(MIN_AUDIO_BYTES));
 
       expect(result.transcript).toBe("");
     });
@@ -55,7 +56,7 @@ describe("transcribe", () => {
       const key = process.env.DEEPGRAM_API_KEY;
       delete process.env.DEEPGRAM_API_KEY;
 
-      await expect(transcribeAudio_service(new ArrayBuffer(8))).rejects.toThrow(
+      await expect(transcribeAudio_service(new ArrayBuffer(MIN_AUDIO_BYTES))).rejects.toThrow(
         "DEEPGRAM_API_KEY is not set"
       );
 

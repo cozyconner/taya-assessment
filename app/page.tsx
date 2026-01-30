@@ -1,4 +1,4 @@
-import AudioRecord from "./components/AudioRecord";
+import AudioRecordButton from "./components/AudioRecordButton";
 import MemoryCards from "./components/MemoryCards";
 import { getMemoryCardsAction } from "./actions/memory-card.actions";
 import type { MemoryCardDisplay } from "@/types/types";
@@ -67,7 +67,7 @@ export default async function MemoryCardPage() {
 
   return (
     <div className="relative min-h-screen bg-[#f5f0e8] font-sans">
-      <AudioRecord />
+      <AudioRecordButton />
       {renderStickyHeader()}
       <MemoryCards groupedMemoryCards={groupedMemoryCards} />
     </div>
