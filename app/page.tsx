@@ -64,14 +64,26 @@ function renderStickyHeader() {
 export default async function MemoryCardPage() {
   const memoryCards = await getMemoryCardsAction();
   const groupedMemoryCards = groupCardsByDate(memoryCards);
+  const hasCards = groupedMemoryCards.length > 0 && groupedMemoryCards.some(group => group.cards.length > 0);
 
   return (
     <div className="relative min-h-screen bg-[#f5f0e8] font-sans">
-      <AudioRecord />
-
-      {renderStickyHeader()}
-
-      <MemoryCards groupedMemoryCards={groupedMemoryCards} />
+      {hasCards ? (
+        <>
+          <AudioRecord />
+          {renderStickyHeader()}
+          <MemoryCards groupedMemoryCards={groupedMemoryCards} />
+        </>
+      ) : (
+        <div className="flex min-h-screen flex-col items-center justify-center px-4">
+          <div className="flex flex-col items-center gap-6">
+            <AudioRecord centered />
+            <p className="text-center text-lg font-medium text-stone-700">
+              Create your first memory card
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

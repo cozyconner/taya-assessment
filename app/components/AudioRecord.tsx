@@ -24,7 +24,11 @@ const OVERALL_AVG_LOW_THRESHOLD = 0.002;
 /** RMS above this = "we're hearing you" */
 const SPEECH_DETECTED_THRESHOLD = 0.02;
 
-export default function AudioRecord() {
+type AudioRecordProps = {
+  centered?: boolean;
+};
+
+export default function AudioRecord({ centered = false }: AudioRecordProps) {
   const offlineMode = useGlobalControls((s) => s.offlineMode);
   const offlineModeRef = useRef(offlineMode);
   offlineModeRef.current = offlineMode;
@@ -264,7 +268,11 @@ export default function AudioRecord() {
     <div
       className={cn(
         "overflow-hidden transition-all duration-500 ease-out",
-        isExpanded ? "fixed inset-0 z-20" : "fixed top-0 left-0 right-0 z-20"
+        isExpanded 
+          ? "fixed inset-0 z-20" 
+          : centered 
+            ? "relative z-20" 
+            : "fixed top-0 left-0 right-0 z-20"
       )}
     >
       <div

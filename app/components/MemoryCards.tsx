@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import MemoryCard from "@/app/components/MemoryCard";
 import MemoryCardDetailModal from "@/app/components/MemoryCardDetailModal";
 import Switch from "@/ui/Switch";
@@ -15,6 +16,8 @@ type MemoryCardsProps = {
 
 export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
   const { offlineMode, setOfflineMode } = useGlobalControls();
+  const searchParams = useSearchParams();
+  const isAdmin = searchParams.get("admin") === "1";
 
   const [selectedCard, setSelectedCard] = useState<MemoryCardDisplay | null>(
     null
@@ -41,16 +44,18 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-stone-900">Your moments</h2>
-            <Switch
-              checked={offlineMode}
-              onCheckedChange={setOfflineMode}
-              label="Listening only"
-              aria-label={
-                offlineMode
-                  ? "Listening only (audio not sent)"
-                  : "Send audio to server"
-              }
-            />
+            {isAdmin && (
+              <Switch
+                checked={offlineMode}
+                onCheckedChange={setOfflineMode}
+                label="Listening only"
+                aria-label={
+                  offlineMode
+                    ? "Listening only (audio not sent)"
+                    : "Send audio to server"
+                }
+              />
+            )}
           </div>
 
           <div className="flex flex-col gap-6">
