@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMemoryCard } from "@/app/actions/memory-card.actions";
+import Tag from "@/app/components/Tag";
 import type { MemoryCardDisplay } from "@/types/types";
 
 const LONG_PRESS_MS = 800;
@@ -19,9 +20,15 @@ function formatMood(mood: string): string {
   return mood.charAt(0).toUpperCase() + mood.slice(1).toLowerCase();
 }
 
-export default function MemoryCard({ card }: { card: MemoryCardDisplay }) {
+type MemoryCardProps = {
+  card: MemoryCardDisplay;
+  onOpenDetail?: () => void;
+};
+
+export default function MemoryCard({ card, onOpenDetail }: MemoryCardProps) {
   const router = useRouter();
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pointerLeftRef = useRef(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -33,6 +40,7 @@ export default function MemoryCard({ card }: { card: MemoryCardDisplay }) {
   }, []);
 
   const handlePressStart = useCallback(() => {
+    pointerLeftRef.current = false;
     clearLongPressTimer();
     longPressTimer.current = setTimeout(() => {
       longPressTimer.current = null;
@@ -41,6 +49,14 @@ export default function MemoryCard({ card }: { card: MemoryCardDisplay }) {
   }, [clearLongPressTimer]);
 
   const handlePressEnd = useCallback(() => {
+    clearLongPressTimer();
+    if (!showDeleteConfirm && !pointerLeftRef.current) {
+      onOpenDetail?.();
+    }
+  }, [clearLongPressTimer, showDeleteConfirm, onOpenDetail]);
+
+  const handlePointerLeave = useCallback(() => {
+    pointerLeftRef.current = true;
     clearLongPressTimer();
   }, [clearLongPressTimer]);
 
@@ -65,7 +81,7 @@ export default function MemoryCard({ card }: { card: MemoryCardDisplay }) {
       className="relative rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md select-none"
       onMouseDown={handlePressStart}
       onMouseUp={handlePressEnd}
-      onMouseLeave={handlePressEnd}
+      onMouseLeave={handlePointerLeave}
       onTouchStart={handlePressStart}
       onTouchEnd={handlePressEnd}
       onTouchCancel={handlePressEnd}
@@ -113,18 +129,17 @@ export default function MemoryCard({ card }: { card: MemoryCardDisplay }) {
       <p className="mt-2 text-sm leading-relaxed text-stone-700">
         {description}
       </p>
+      {card.actionItems.length > 0 && (
+        <p className="mt-1 text-xs text-stone-500">
+          {card.actionItems.length}{" "}
+          {card.actionItems.length === 1 ? "action item" : "action items"}
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
-          {formatMood(card.mood)}
-        </span>
+        <Tag variant="teal">{formatMood(card.mood)}</Tag>
         {card.categories.length > 0 &&
-          card.categories.slice(0, 3).map((cat) => (
-            <span
-              key={cat}
-              className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs text-stone-600"
-            >
-              {cat}
-            </span>
+          card.categories.slice(0, 3).map((category) => (
+            <Tag key={category}>{category}</Tag>
           ))}
       </div>
     </article>

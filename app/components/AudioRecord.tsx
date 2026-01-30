@@ -298,9 +298,6 @@ export default function AudioRecord() {
         {isExpanded ? (
           <>
             <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-6 pt-12">
-              <p className="text-center text-sm font-medium text-teal-800/80">
-                Live transcription • Auto-stops after silence
-              </p>
               <div className="relative rounded-full p-1 w-20 h-20 flex items-center justify-center">
                 {recordState === "recording" && (
                   <div
@@ -377,9 +374,10 @@ export default function AudioRecord() {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-center text-lg leading-relaxed text-black">
-                    {transcription || (recordState === "recording" ? "Listening..." : "")}
-                  </p>
+                  // <p className="text-center text-lg leading-relaxed text-black">
+                  //   {transcription || (recordState === "recording" ? "Listening..." : "")}
+                  // </p>
+                  null
                 )}
               </div>
             </div>
@@ -416,7 +414,6 @@ export default function AudioRecord() {
                 <span className="h-5 w-5 rounded-full bg-white" />
               </button>
             </div>
-            <p className="text-sm text-stone-600">Tap to record</p>
           </div>
         )}
       </div>
