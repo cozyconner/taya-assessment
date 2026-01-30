@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMemoryCardAction } from "@/app/actions/memory-card.actions";
 import MemoryCardTags from "@/app/components/MemoryCardTags";
+import { useOptimisticMemoryCards } from "@/stores/useOptimisticMemoryCards";
 import MenuButton from "@/ui/MenuButton";
 import type { MemoryCardDisplay } from "@/types/types";
 import { cn, formatTimeLong, formatTimeShort } from "@/lib/utils";
@@ -29,6 +30,7 @@ export default function MemoryCard({
   const [isClosing, setIsClosing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const removeOptimisticCard = useOptimisticMemoryCards((s) => s.removeCard);
 
   const handleClose = useCallback(() => {
     if (isClosing) {
@@ -75,6 +77,9 @@ export default function MemoryCard({
     card.transcript.length > 120
       ? `${card.transcript.slice(0, 120).trim()}...`
       : card.transcript;
+
+  const showOverlay = Boolean(card.uiState);
+  const overlayVisible = card.uiState === "pending" || card.uiState === "error";
 
   function renderActionItems(actionItems: string[]) {
     return (
@@ -196,10 +201,49 @@ export default function MemoryCard({
 
   return (
     <article
-      className="relative rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+      className={cn(
+        "relative rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm transition-shadow",
+        onOpenDetail ? "cursor-pointer hover:shadow-md" : "cursor-default"
+      )}
       onClick={onOpenDetail}
       role={onOpenDetail ? "button" : undefined}
     >
+      {showOverlay && (
+        <div
+          className={cn(
+            "absolute inset-0 z-10 rounded-2xl bg-white/35 backdrop-blur-md transition-opacity duration-300",
+            overlayVisible ? "opacity-100" : "pointer-events-none opacity-0"
+          )}
+          aria-hidden={!overlayVisible}
+        >
+          <div className="flex h-full w-full items-center justify-center">
+            {card.uiState === "error" ? (
+              <div className="mx-6 rounded-xl border border-red-200 bg-white/70 px-4 py-3 text-center shadow-sm">
+                <p className="text-sm font-semibold text-red-700">Processing failed</p>
+                <p className="mt-1 text-xs text-red-700/90">
+                  {card.uiError ?? "Please try again."}
+                </p>
+                <button
+                  type="button"
+                  className="mt-3 rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                  onClick={() => removeOptimisticCard(card.id)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="h-10 w-10 animate-spin rounded-full border-2 border-white/80 border-t-teal-600"
+                  aria-label="Loading"
+                />
+                <p className="text-xs font-medium text-stone-700">Processing…</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <h3 className="min-w-0 flex-1 text-base font-semibold leading-tight text-stone-900">
           {card.title}

@@ -10,7 +10,7 @@ import {
   MEMORY_CARD_RETRY_PROMPT_APPEND,
   MEMORY_CARD_SYSTEM_PROMPT,
   MEMORY_CARD_USER_MESSAGE_PREFIX,
-} from "./prompts";
+} from "@/lib/prompts";
 
 export const MemoryCardOutputSchema = z.object({
   title: z.string().min(1).max(200),

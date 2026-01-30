@@ -66,4 +66,13 @@ export interface MemoryCardDisplay {
   mood: string;
   categories: string[];
   actionItems: string[];
+  /**
+   * Client-only UI state for optimistic/temporary cards.
+   * - pending: show blurred overlay + spinner
+   * - done: fade overlay out (used briefly before swapping to server-rendered card)
+   * - error: show error overlay
+   */
+  uiState?: "pending" | "done" | "error";
+  /** Optional error message when uiState === "error". */
+  uiError?: string;
 }

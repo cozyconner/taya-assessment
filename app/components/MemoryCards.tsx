@@ -6,6 +6,7 @@ import MemoryCard from "@/app/components/MemoryCard";
 import MemoryCardDetailModal from "@/app/components/MemoryCardDetailModal";
 import Switch from "@/ui/Switch";
 import { useGlobalControls } from "@/stores/useGlobalControls";
+import { useOptimisticMemoryCards } from "@/stores/useOptimisticMemoryCards";
 import type { MemoryCardDisplay } from "@/types/types";
 
 type Group = { label: string; cards: MemoryCardDisplay[] };
@@ -16,6 +17,7 @@ type MemoryCardsProps = {
 
 export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
   const { offlineMode, setOfflineMode } = useGlobalControls();
+  const optimisticCards = useOptimisticMemoryCards((s) => s.cards);
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("admin") === "1";
 
@@ -23,7 +25,37 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
     null
   );
 
-  const hasCards = groupedMemoryCards.length > 0 && groupedMemoryCards.some(group => group.cards.length > 0);
+  const hasCards =
+    groupedMemoryCards.length > 0 &&
+    groupedMemoryCards.some((group) => group.cards.length > 0);
+  const hasOptimistic = optimisticCards.length > 0;
+
+  const groupsWithOptimistic: Group[] = (() => {
+    if (!hasOptimistic) return groupedMemoryCards;
+
+    const optimisticIdSet = new Set(optimisticCards.map((c) => c.id));
+    const dedupedGroups = groupedMemoryCards.map((g) => ({
+      ...g,
+      cards: g.cards.filter((c) => !optimisticIdSet.has(c.id)),
+    }));
+
+    const idxToday = dedupedGroups.findIndex((g) => g.label === "Today");
+
+    if (idxToday >= 0) {
+      const today = dedupedGroups[idxToday];
+      const mergedToday: Group = {
+        ...today,
+        cards: [...optimisticCards, ...today.cards],
+      };
+      return [
+        ...dedupedGroups.slice(0, idxToday),
+        mergedToday,
+        ...dedupedGroups.slice(idxToday + 1),
+      ];
+    }
+
+    return [{ label: "Today", cards: optimisticCards }, ...dedupedGroups];
+  })();
 
   function renderCardList(cards: MemoryCardDisplay[]) {
     return (
@@ -32,7 +64,9 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
           <li key={card.id}>
             <MemoryCard
               card={card}
-              onOpenDetail={() => setSelectedCard(card)}
+              onOpenDetail={
+                card.uiState ? undefined : () => setSelectedCard(card)
+              }
             />
           </li>
         ))}
@@ -45,7 +79,7 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
       <section data-id="memoryCardsComponent" className="relative z-0 px-4 pb-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
-            {hasCards ? (
+            {hasCards || hasOptimistic ? (
               <h2 className="text-xl font-bold text-stone-900">Your moments</h2>
             ) : (
               <div />
@@ -66,7 +100,18 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
 
           {hasCards ? (
             <div className="flex flex-col gap-6">
-              {groupedMemoryCards.map(({ label, cards }) => (
+              {groupsWithOptimistic.map(({ label, cards }) => (
+                <div key={label}>
+                  <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
+                    {label}
+                  </h3>
+                  {renderCardList(cards)}
+                </div>
+              ))}
+            </div>
+          ) : hasOptimistic ? (
+            <div className="flex flex-col gap-6">
+              {groupsWithOptimistic.map(({ label, cards }) => (
                 <div key={label}>
                   <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
                     {label}

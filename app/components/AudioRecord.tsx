@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMemoryCardFromAudioAction } from "@/app/actions/memory-card.actions";
+import { MOCK_MEMORY_CARDS } from "@/app/data";
 import { cn } from "@/lib/utils";
 import { useGlobalControls } from "@/stores/useGlobalControls";
+import { useOptimisticMemoryCards } from "@/stores/useOptimisticMemoryCards";
 import type { AudioRecordState } from "@/types/types";
 
 const OUTER_GLOW_SPREAD = 1.5; // 1.5
@@ -31,6 +33,11 @@ export default function AudioRecord() {
   const offlineMode = useGlobalControls((s) => s.offlineMode);
   const offlineModeRef = useRef(offlineMode);
   offlineModeRef.current = offlineMode;
+
+  const addOptimisticCard = useOptimisticMemoryCards((s) => s.addCard);
+  const updateOptimisticCard = useOptimisticMemoryCards((s) => s.updateCard);
+  const removeOptimisticCard = useOptimisticMemoryCards((s) => s.removeCard);
+  const replaceOptimisticCardId = useOptimisticMemoryCards((s) => s.replaceCardId);
 
   const [recordState, setRecordState] = useState<AudioRecordState>("idle");
   const [transcription, setTranscription] = useState("");
@@ -132,6 +139,8 @@ export default function AudioRecord() {
           if (!silenceAutoStopFiredRef.current) {
             silenceAutoStopFiredRef.current = true;
             isRecordingRef.current = false;
+            setRecordState("idle");
+            setTranscription("");
             stopRecordingRef.current();
           }
         }
@@ -178,52 +187,81 @@ export default function AudioRecord() {
           const isEmptyOrTooShort = elapsedMs > 0 && elapsedMs <= MAX_EMPTY_RECORDING_MS;
 
           if (offlineModeRef.current) {
-            setRecordState("done");
-            setTranscription("Not saved (listening only)");
-            setTimeout(() => {
-              setRecordState("idle");
-              setTranscription("");
-            }, 1500);
             return;
           }
 
           // If we stopped due to 2s of silence, elapsed will be ~2000ms.
           // Treat anything <= 2750ms as "nothing useful" and never upload.
           if (isEmptyOrTooShort) {
-            setRecordState("done");
-            setTranscription("");
-            setRecordState("idle");
             return;
           }
 
           // Secondary guardrail: if it *wasn't* the auto-stop case, still block if it's effectively silence.
           if (isTooQuiet) {
-            setRecordState("done");
-            setTranscription("");
-            setRecordState("idle");
             return;
           }
 
-          setRecordState("uploading");
-          setTranscription("Processing...");
+          const base =
+            MOCK_MEMORY_CARDS[Math.floor(Math.random() * MOCK_MEMORY_CARDS.length)];
+
+          const uuid =
+            typeof crypto !== "undefined" && "randomUUID" in crypto
+              ? crypto.randomUUID()
+              : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+          const optimisticId = `optimistic-${uuid}`;
+
+          addOptimisticCard({
+            ...base,
+            id: optimisticId,
+            createdAt: new Date(),
+            uiState: "pending",
+            uiError: undefined,
+          });
 
           const formData = new FormData();
           formData.set("audio", blob, "recording.webm");
 
-          const result = await createMemoryCardFromAudioAction(formData);
+          try {
+            const result = await createMemoryCardFromAudioAction(formData);
 
-          if (result.ok) {
-            setRecordState("done");
-            setTranscription(result.card.title);
-            router.refresh();
-            setRecordState("idle");
-            setTranscription("");
-          } else {
-            setRecordState("error");
-            setRecordError(result.error);
-            setTranscription("");
-            setRecordState("idle");
-            setRecordError(null);
+            if (result.ok) {
+              // Update in-place to show real content, then fade overlay off.
+              updateOptimisticCard(optimisticId, {
+                title: result.card.title,
+                transcript: result.card.transcript,
+                mood: result.card.mood,
+                categories: result.card.categories,
+                actionItems: result.card.actionItems,
+                createdAt: new Date(result.card.createdAt),
+                uiState: "done",
+                uiError: undefined,
+              });
+
+              // Swap the optimistic id to the real server id so the card stays in-place
+              // (prevents "flash" where we remove then re-add after refresh).
+              const serverId = result.card.id;
+              replaceOptimisticCardId(optimisticId, serverId);
+
+              // After the fade completes, remove the overlay entirely so the card behaves normally.
+              setTimeout(() => {
+                updateOptimisticCard(serverId, { uiState: undefined, uiError: undefined });
+              }, 350);
+
+              // Refresh in the background to keep server-rendered data in sync.
+              // Server card is deduped by id while the optimistic one exists.
+              router.refresh();
+            } else {
+              updateOptimisticCard(optimisticId, {
+                uiState: "error",
+                uiError: result.error,
+              });
+            }
+          } catch (err) {
+            updateOptimisticCard(optimisticId, {
+              uiState: "error",
+              uiError: err instanceof Error ? err.message : "Something went wrong.",
+            });
           }
         };
 
@@ -246,6 +284,8 @@ export default function AudioRecord() {
     } else {
       if (recordState === "recording") {
         isRecordingRef.current = false;
+        setRecordState("idle");
+        setTranscription("");
         stopRecording();
       } else if (recordState === "done" || recordState === "error") {
         setRecordState("idle");
@@ -385,10 +425,7 @@ export default function AudioRecord() {
                   }
                 >
                   {recordState === "recording" ? (
-                    <span className="flex gap-1">
-                      <span className="h-6 w-1.5 rounded-full bg-white" />
-                      <span className="h-6 w-1.5 rounded-full bg-white" />
-                    </span>
+                    <span className="h-5 w-5 rounded-sm bg-white" />
                   ) : (
                     <span className="h-5 w-5 rounded-full bg-white" />
                   )}

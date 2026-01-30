@@ -23,3 +23,4 @@ export const MEMORY_CARD_RETRY_PROMPT_APPEND =
 
 /** Prefix for the user message when sending a transcript to the memory-card model. */
 export const MEMORY_CARD_USER_MESSAGE_PREFIX = "Transcript:\n\n";
+
