@@ -14,8 +14,8 @@ const TEAL = {
 /** RMS below this for SILENCE_DURATION_MS = silence detected */
 const RMS_SILENCE_THRESHOLD = 0.01;
 const SILENCE_DURATION_MS = 3000;
-/** Overall average RMS below this = "very quiet" recording */
-const OVERALL_AVG_LOW_THRESHOLD = 0.008;
+/** Overall average RMS below this = "very quiet" recording (only near-silence) */
+const OVERALL_AVG_LOW_THRESHOLD = 0.002;
 /** RMS above this = "we're hearing you" */
 const SPEECH_DETECTED_THRESHOLD = 0.02;
 
@@ -36,6 +36,8 @@ export default function AudioRecord() {
   const rmsHistoryRef = useRef<number[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isRecordingRef = useRef(false);
+  const silenceAutoStopFiredRef = useRef(false);
+  const stopRecordingRef = useRef<() => void>(() => { });
   const router = useRouter();
 
   const isExpanded = recordState !== "idle";
@@ -107,7 +109,12 @@ export default function AudioRecord() {
         const now = Date.now();
         if (silenceStartRef.current == null) silenceStartRef.current = now;
         else if (now - silenceStartRef.current >= SILENCE_DURATION_MS) {
-          setSilenceWarning("No sound detected for a while. Say something or stop recording.");
+          if (!silenceAutoStopFiredRef.current) {
+            silenceAutoStopFiredRef.current = true;
+            setSilenceWarning("No sound detected. Stopping recording.");
+            isRecordingRef.current = false;
+            stopRecordingRef.current();
+          }
         }
       } else {
         silenceStartRef.current = null;
@@ -124,6 +131,7 @@ export default function AudioRecord() {
       setRecordError(null);
       setSilenceWarning(null);
       silenceStartRef.current = null;
+      silenceAutoStopFiredRef.current = false;
       rmsHistoryRef.current = [];
 
       try {
@@ -158,10 +166,14 @@ export default function AudioRecord() {
             setTranscription(result.card.title);
             setSilenceWarning(null);
             router.refresh();
+            setRecordState("idle");
+            setTranscription("");
           } else {
             setRecordState("error");
             setRecordError(result.error);
             setTranscription("");
+            setRecordState("idle");
+            setRecordError(null);
           }
         };
 
@@ -194,6 +206,10 @@ export default function AudioRecord() {
       }
     }
   }, [recordState, startLevelMeter, stopRecording]);
+
+  useEffect(() => {
+    stopRecordingRef.current = stopRecording;
+  }, [stopRecording]);
 
   useEffect(() => {
     return () => stopRecording();
@@ -273,52 +289,52 @@ export default function AudioRecord() {
               <p className="text-center text-sm font-medium text-teal-800/80">
                 Live transcription • Auto-stops after silence
               </p>
-            <div
-              className="relative rounded-full p-1 transition-shadow duration-75"
-              style={{
-                background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
-                boxShadow: recordState === "recording" ? `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}` : undefined,
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleToggle}
-                disabled={recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"}
-                className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
-                aria-label={
-                  recordState === "recording"
-                    ? "Stop recording"
-                    : recordState === "done" || recordState === "error"
-                      ? "Done"
-                      : recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"
-                        ? "Processing"
-                        : "Record"
-                }
+              <div
+                className="relative rounded-full p-1 transition-shadow duration-75"
+                style={{
+                  background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
+                  boxShadow: recordState === "recording" ? `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}` : undefined,
+                }}
               >
-                {recordState === "recording" ? (
-                  <span className="flex gap-1">
-                    <span className="h-6 w-1.5 rounded-full bg-white" />
-                    <span className="h-6 w-1.5 rounded-full bg-white" />
-                  </span>
-                ) : (
-                  <span className="h-5 w-5 rounded-full bg-white" />
-                )}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={handleToggle}
+                  disabled={recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"}
+                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  aria-label={
+                    recordState === "recording"
+                      ? "Stop recording"
+                      : recordState === "done" || recordState === "error"
+                        ? "Done"
+                        : recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"
+                          ? "Processing"
+                          : "Record"
+                  }
+                >
+                  {recordState === "recording" ? (
+                    <span className="flex gap-1">
+                      <span className="h-6 w-1.5 rounded-full bg-white" />
+                      <span className="h-6 w-1.5 rounded-full bg-white" />
+                    </span>
+                  ) : (
+                    <span className="h-5 w-5 rounded-full bg-white" />
+                  )}
+                </button>
+              </div>
               {silenceWarning && (
                 <p className="max-w-sm text-center text-sm font-medium text-amber-800">
                   {silenceWarning}
                 </p>
               )}
-            <div className="min-h-[4rem] max-w-md text-center">
-              {recordState === "error" && recordError ? (
-                <p className="text-lg leading-relaxed text-red-800">{recordError}</p>
-              ) : (
-                <p className="text-lg leading-relaxed text-black">
-                  {transcription || (recordState === "recording" ? "Listening..." : "Processing...")}
-                </p>
-              )}
-            </div>
+              <div className="min-h-[4rem] max-w-md text-center">
+                {recordState === "error" && recordError ? (
+                  <p className="text-lg leading-relaxed text-red-800">{recordError}</p>
+                ) : (
+                  <p className="text-lg leading-relaxed text-black">
+                    {transcription || (recordState === "recording" ? "Listening..." : "Processing...")}
+                  </p>
+                )}
+              </div>
             </div>
             {isHearingYou && (
               <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pb-8">
