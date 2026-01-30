@@ -1,0 +1,87 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/**
+ * Mood is constrained to prevent drift and keep UX consistent.
+ * Balanced intentionally for a meditative app:
+ * - 6 positive
+ * - 2 neutral
+ * - 2 negative
+ */
+enum Mood {
+  // Positive
+  relaxed
+  excited
+  content
+  grateful
+  hopeful
+  inspired
+
+  // Neutral
+  pensive
+  reflective
+
+  // Negative
+  anxious
+  frustrated
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memoryCards MemoryCard[]
+}
+
+model MemoryCard {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /**
+   * Raw transcript from speech-to-text.
+   * Useful for debugging and progressive UI rendering.
+   */
+  transcript String
+
+  /**
+   * Core synthesized fields rendered in the UI.
+   */
+  title String
+  mood  Mood
+
+  /**
+   * Generated categories / tags.
+   * Stored as Postgres text[] via Prisma String[].
+   * Example: ["shopping", "personal", "ideas"]
+   */
+  categories String[] @default([])
+
+  /**
+   * Actionable next steps only.
+   * Stored as Postgres text[].
+   */
+  actionItems String[] @default([])
+
+  /**
+   * Optional: full validated LLM output for audit/debug.
+   */
+  raw Json?
+
+  @@index([createdAt])
+  @@index([mood])
+  @@index([userId])
+}
