@@ -4,30 +4,24 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMemoryCardFromAudioAction } from "@/app/actions/memory-card.actions";
 import { MOCK_MEMORY_CARDS } from "@/app/data/data";
+import { TEAL } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 import { useGlobalControls } from "@/stores/useGlobalControls";
 import { useOptimisticMemoryCards } from "@/stores/useOptimisticMemoryCards";
 import type { AudioRecordState } from "@/types/types";
 
-const OUTER_GLOW_SPREAD = 1.5; // 1.5
+const OUTER_GLOW_SPREAD = 1.5;
 const GLOW_BOUNCE_SIZE = 1.2;
-
-const TEAL = {
-  light: "rgb(94 234 212 / 0.4)",
-  mid: "rgb(45 212 191 / 0.6)",
-  dark: "rgb(20 184 166)",
-};
 
 /** RMS below this for SILENCE_DURATION_MS = silence detected */
 const RMS_SILENCE_THRESHOLD = 0.01;
-const SILENCE_DURATION_MS = 2000;
+const SILENCE_DURATION_MS = 3000;
 /** Overall average RMS below this = "very quiet" recording (only near-silence) */
 const OVERALL_AVG_LOW_THRESHOLD = 0.002;
 /** RMS above this = "we're hearing you" */
 const SPEECH_DETECTED_THRESHOLD = 0.02;
 /** Guardrails to avoid uploading empty / useless audio */
-// If we auto-stop after 2000ms of silence, a clip of ~2750ms is almost certainly "no useful audio".
-const MAX_EMPTY_RECORDING_MS = 2000 + 750;
+const MAX_EMPTY_RECORDING_MS = SILENCE_DURATION_MS + 750;
 
 export default function AudioRecordButton() {
   const offlineMode = useGlobalControls((s) => s.offlineMode);
@@ -36,11 +30,9 @@ export default function AudioRecordButton() {
 
   const addOptimisticCard = useOptimisticMemoryCards((s) => s.addCard);
   const updateOptimisticCard = useOptimisticMemoryCards((s) => s.updateCard);
-  const removeOptimisticCard = useOptimisticMemoryCards((s) => s.removeCard);
   const replaceOptimisticCardId = useOptimisticMemoryCards((s) => s.replaceCardId);
 
   const [recordState, setRecordState] = useState<AudioRecordState>("idle");
-  const [transcription, setTranscription] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
   const [smoothedLevel, setSmoothedLevel] = useState(0);
   const [recordError, setRecordError] = useState<string | null>(null);
@@ -140,7 +132,6 @@ export default function AudioRecordButton() {
             silenceAutoStopFiredRef.current = true;
             isRecordingRef.current = false;
             setRecordState("idle");
-            setTranscription("");
             stopRecordingRef.current();
           }
         }
@@ -285,17 +276,14 @@ export default function AudioRecordButton() {
       if (recordState === "recording") {
         isRecordingRef.current = false;
         setRecordState("idle");
-        setTranscription("");
         stopRecording();
       } else if (recordState === "done" || recordState === "error") {
         setRecordState("idle");
-        setTranscription("");
         setRecordError(null);
       } else {
         isRecordingRef.current = false;
         stopRecording();
         setRecordState("idle");
-        setTranscription("");
       }
     }
   }, [recordState, startLevelMeter, stopRecording]);
@@ -311,7 +299,6 @@ export default function AudioRecordButton() {
   const normalizedLevel = Math.min(1, audioLevel * 8);
   const displayLevel = recordState === "recording" ? smoothedLevel : normalizedLevel;
   const orbGlow = 12 + displayLevel * 24;
-  const isHearingYou = recordState === "recording" && audioLevel >= SPEECH_DETECTED_THRESHOLD;
 
   return (
     <div
@@ -438,21 +425,6 @@ export default function AudioRecordButton() {
                 </div>
               ) : null}
             </div>
-            {/* {isHearingYou && (
-              <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pb-8">
-                <div
-                  className="flex items-center gap-2 rounded-full bg-emerald-500/90 px-4 py-2 text-sm font-medium text-white shadow-md"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-                  </span>
-                  We're hearing you
-                </div>
-              </div>
-            )} */}
           </>
         ) : (
           <div className="flex flex-col items-center gap-4">
