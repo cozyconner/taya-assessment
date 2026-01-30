@@ -26,19 +26,10 @@ export type AudioRecordState =
   | "error";
 
 /**
- * Base DTO with common fields present in all database entities.
- */
-export interface BaseDto {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
  * Full MemoryCard DTO.
  * Uses Prisma type for type safety (already includes id, createdAt, updatedAt).
  */
-export type MemoryCardDto = Prisma.MemoryCardGetPayload<{}>;
+export type MemoryCardDto = Prisma.MemoryCardGetPayload<Record<string, never>>;
 
 /**
  * Payload for creating a MemoryCard.

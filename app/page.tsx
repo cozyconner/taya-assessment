@@ -1,6 +1,7 @@
 import AudioRecordButton from "./components/AudioRecordButton";
 import MemoryCards, { GroupedMemoryCards } from "./components/MemoryCards";
 import { getMemoryCardsAction } from "./actions/memory-card.actions";
+import { Suspense } from "react";
 import type { MemoryCardDisplay } from "@/types/types";
 
 function groupCardsByDate(memoryCards: MemoryCardDisplay[]): GroupedMemoryCards[] {
@@ -70,9 +71,9 @@ export default async function MemoryCardPage() {
     <div className="relative min-h-screen bg-[#f5f0e8] font-sans">
       <AudioRecordButton />
       {renderStickyHeader()}
-      <MemoryCards
-        groupedMemoryCards={groupedMemoryCards}
-      />
+      <Suspense fallback={null}>
+        <MemoryCards groupedMemoryCards={groupedMemoryCards} />
+      </Suspense>
     </div>
   );
 }
