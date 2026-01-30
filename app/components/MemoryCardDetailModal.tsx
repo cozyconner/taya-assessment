@@ -1,7 +1,7 @@
 "use client";
 
 import Modal from "@/app/components/Modal";
-import MemoryCardDetail from "@/app/components/MemoryCardDetail";
+import MemoryCard from "@/app/components/MemoryCard";
 import type { MemoryCardDisplay } from "@/types/types";
 
 type MemoryCardDetailModalProps = {
@@ -15,7 +15,9 @@ export default function MemoryCardDetailModal({
 }: MemoryCardDetailModalProps) {
   return (
     <Modal open={!!card}>
-      {card ? <MemoryCardDetail card={card} onClose={onClose} /> : null}
+      {card ? (
+        <MemoryCard card={card} isDetail onClose={onClose} />
+      ) : null}
     </Modal>
   );
 }

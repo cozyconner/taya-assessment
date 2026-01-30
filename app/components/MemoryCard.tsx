@@ -1,14 +1,14 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMemoryCard } from "@/app/actions/memory-card.actions";
 import MemoryCardTags from "@/app/components/MemoryCardTags";
 import type { MemoryCardDisplay } from "@/types/types";
 
-const LONG_PRESS_MS = 800;
+const DURATION_MS = 200;
 
-function formatTime(date: Date): string {
+function formatTimeShort(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -16,111 +16,220 @@ function formatTime(date: Date): string {
   }).format(date);
 }
 
+function formatTimeLong(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+}
+
+function renderActionItems(actionItems: string[]) {
+  return (
+    <ul className="mt-2 list-outside list-disc space-y-1 pl-4 pr-0 text-sm text-stone-700 [&_li::marker]:text-stone-500">
+      {actionItems.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
 type MemoryCardProps = {
   card: MemoryCardDisplay;
   onOpenDetail?: () => void;
+  isDetail?: boolean;
+  onClose?: () => void;
 };
 
-export default function MemoryCard({ card, onOpenDetail }: MemoryCardProps) {
+export default function MemoryCard({
+  card,
+  onOpenDetail,
+  isDetail = false,
+  onClose,
+}: MemoryCardProps) {
   const router = useRouter();
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pointerLeftRef = useRef(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const clearLongPressTimer = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
+  const handleClose = useCallback(() => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => onClose?.(), DURATION_MS);
+  }, [onClose, isClosing]);
 
-  const handlePressStart = useCallback(() => {
-    pointerLeftRef.current = false;
-    clearLongPressTimer();
-    longPressTimer.current = setTimeout(() => {
-      longPressTimer.current = null;
-      setShowDeleteConfirm(true);
-    }, LONG_PRESS_MS);
-  }, [clearLongPressTimer]);
-
-  const handlePressEnd = useCallback(() => {
-    clearLongPressTimer();
-    if (!showDeleteConfirm && !pointerLeftRef.current) {
-      onOpenDetail?.();
-    }
-  }, [clearLongPressTimer, showDeleteConfirm, onOpenDetail]);
-
-  const handlePointerLeave = useCallback(() => {
-    pointerLeftRef.current = true;
-    clearLongPressTimer();
-  }, [clearLongPressTimer]);
+  const handleEscape = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (menuOpen) setMenuOpen(false);
+        else handleClose();
+      }
+    },
+    [handleClose, menuOpen]
+  );
 
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
     const result = await deleteMemoryCard(card.id);
     setIsDeleting(false);
-    setShowDeleteConfirm(false);
+    setMenuOpen(false);
     if (result.ok) {
+      if (isDetail && onClose) handleClose();
       router.refresh();
     }
-  }, [card.id, router]);
+  }, [card.id, isDetail, onClose, handleClose, router]);
 
-  const time = formatTime(new Date(card.createdAt));
+  useEffect(() => {
+    if (!isDetail) return;
+    const t = requestAnimationFrame(() => setIsVisible(true));
+    return () => cancelAnimationFrame(t);
+  }, [isDetail]);
+
+  useEffect(() => {
+    if (!isDetail) return;
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isDetail, handleEscape]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  const timeShort = formatTimeShort(new Date(card.createdAt));
+  const timeLong = formatTimeLong(new Date(card.createdAt));
   const description =
     card.transcript.length > 120
       ? `${card.transcript.slice(0, 120).trim()}...`
       : card.transcript;
 
+  function renderMenuButton() {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setMenuOpen((open) => !open);
+        }}
+        className="rounded-full p-1.5 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+        aria-label="Options"
+        aria-expanded={menuOpen}
+      >
+        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="6" r="1.5" />
+          <circle cx="12" cy="12" r="1.5" />
+          <circle cx="12" cy="18" r="1.5" />
+        </svg>
+      </button>
+    );
+  }
+
+  const threeDotsMenu = (
+    <div ref={menuRef} className="relative z-20">
+      {renderMenuButton()}
+      {menuOpen && (
+        <div className="absolute right-0 top-full mt-1 min-w-[120px] rounded-lg border border-stone-200 bg-white py-1 shadow-lg">
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-stone-50 disabled:opacity-50"
+          >
+            {isDeleting ? "Deleting…" : "Delete"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            className="w-full px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (isDetail) {
+    const backdropOpacity =
+      isVisible && !isClosing ? "opacity-100" : "opacity-0";
+    const panelOpacity =
+      isVisible && !isClosing ? "opacity-100 scale-100" : "opacity-0 scale-95";
+
+    return (
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/15 backdrop-blur-sm transition-opacity duration-200 ease-out ${backdropOpacity}`}
+        aria-modal
+        aria-labelledby="memory-detail-title"
+        role="dialog"
+      >
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute inset-0 z-0"
+          aria-label="Close"
+        />
+        <div
+          className={`relative z-10 w-full max-w-lg rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xl transition-all duration-200 ease-out ${panelOpacity}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="absolute right-4 top-4 z-20">
+            {threeDotsMenu}
+          </div>
+          <div className="pr-8">
+            <h2
+              id="memory-detail-title"
+              className="text-lg font-semibold leading-tight text-stone-900"
+            >
+              {card.title}
+            </h2>
+            <p className="mt-1 text-sm text-stone-500">{timeLong}</p>
+          </div>
+
+          <p className="mt-3 text-sm leading-relaxed text-stone-700">
+            {card.transcript}
+          </p>
+
+          <MemoryCardTags
+            mood={card.mood}
+            categories={card.categories}
+            className="mt-4"
+          />
+
+          {card.actionItems.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                Action items
+              </h3>
+              {renderActionItems(card.actionItems)}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <article
-      className="relative rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md select-none"
-      onMouseDown={handlePressStart}
-      onMouseUp={handlePressEnd}
-      onMouseLeave={handlePointerLeave}
-      onTouchStart={handlePressStart}
-      onTouchEnd={handlePressEnd}
-      onTouchCancel={handlePressEnd}
-      onContextMenu={(e) => e.preventDefault()}
+      className="relative rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+      onClick={onOpenDetail}
+      role={onOpenDetail ? "button" : undefined}
     >
-      {showDeleteConfirm ? (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl bg-stone-900/7 p-4 text-center backdrop-blur-sm">
-          <p className="text-sm font-medium text-stone-900">
-            Delete this memory?
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDeleteConfirm(false);
-              }}
-              className="rounded-full bg-stone-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-500"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handleDelete();
-              }}
-              disabled={isDeleting}
-              className="rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
-            >
-              {isDeleting ? "Deleting…" : "Delete"}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       <div className="flex items-start justify-between gap-3">
-        <h3 className="flex-1 text-base font-semibold leading-tight text-stone-900">
+        <h3 className="min-w-0 flex-1 text-base font-semibold leading-tight text-stone-900">
           {card.title}
         </h3>
-        <div className="flex shrink-0 items-center gap-1.5 text-stone-400">
-          <span className="text-sm">{time}</span>
-        </div>
+        <span className="shrink-0 text-sm text-stone-400">{timeShort}</span>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-stone-700">
         {description}
