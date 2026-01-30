@@ -24,7 +24,7 @@ export async function transcribeAudio_service(
     throw new Error("DEEPGRAM_API_KEY is not set");
   }
 
-  const url = `${DEEPGRAM_BASE}?model=nova-2&smart_format=true`;
+  const url = `${DEEPGRAM_BASE}?model=nova-3&smart_format=true`;
   const response = await fetch(url, {
     method: "POST",
     headers: {
