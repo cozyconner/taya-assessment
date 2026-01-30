@@ -71,6 +71,8 @@ export default async function MemoryCardPage() {
     <div className="relative min-h-screen bg-[#f5f0e8] font-sans">
       <AudioRecordButton />
       {renderStickyHeader()}
+
+      {/* We need Suspense because of the admin flag on <MemoryCards /> which uses useSearchParams() */}
       <Suspense fallback={null}>
         <MemoryCards groupedMemoryCards={groupedMemoryCards} />
       </Suspense>
