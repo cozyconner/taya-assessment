@@ -72,8 +72,8 @@ export default function MemoryCard({ card }: { card: MemoryCardDisplay }) {
       onContextMenu={(e) => e.preventDefault()}
     >
       {showDeleteConfirm ? (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl bg-stone-900/90 p-4 text-center backdrop-blur-sm">
-          <p className="text-sm font-medium text-white">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl bg-stone-900/7 p-4 text-center backdrop-blur-sm">
+          <p className="text-sm font-medium text-stone-900">
             Delete this memory?
           </p>
           <div className="flex gap-2">
