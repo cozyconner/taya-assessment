@@ -8,6 +8,7 @@ import { useGlobalControls } from "@/stores/useGlobalControls";
 import type { AudioRecordState } from "@/types/types";
 
 const OUTER_GLOW_SPREAD = 1.5; // 1.5
+const GLOW_BOUNCE_SIZE = 1.2;
 
 const TEAL = {
   light: "rgb(94 234 212 / 0.4)",
@@ -335,7 +336,7 @@ export default function AudioRecord() {
                     style={{
                       background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
                       boxShadow: `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * OUTER_GLOW_SPREAD}px ${TEAL.light}`,
-                      transform: `scale(${1 + displayLevel * 0.5})`,
+                      transform: `scale(${1 + displayLevel * GLOW_BOUNCE_SIZE})`,
                       transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out",
                     }}
                     aria-hidden
