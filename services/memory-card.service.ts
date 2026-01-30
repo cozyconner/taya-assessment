@@ -33,7 +33,7 @@ export async function generateMemoryCard_service(transcript: string): Promise<Me
     throw new Error("OPENAI_API_KEY is not set");
   }
 
-  const openai = new OpenAI({ apiKey });
+  const openai = new OpenAI({ apiKey: apiKey });
 
   const userContent = `${MEMORY_CARD_USER_MESSAGE_PREFIX}${transcript}`;
 
