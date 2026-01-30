@@ -56,7 +56,7 @@ export default function AudioRecord() {
 
   return (
     <div
-      className={`overflow-hidden transition-all duration-500 ease-out ${isExpanded ? "fixed inset-0 z-10" : "relative"
+      className={`overflow-hidden transition-all duration-500 ease-out ${isExpanded ? "fixed inset-0 z-20" : "fixed top-0 left-0 right-0 z-20"
         }`}
     >
       <div

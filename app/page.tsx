@@ -36,8 +36,10 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-[#f5f0e8] font-sans">
+      <AudioRecord />
+
       <section
-        className="sticky top-0 z-10 min-h-[240px] px-4 pt-8 pb-4"
+        className="sticky top-0 z-10 min-h-[180px] px-4 pt-8 pb-4"
         style={{
           background:
             "linear-gradient(180deg, rgb(150 210 200 / 0.85) 0%, rgb(184 230 222 / 0.4) 50%, transparent 100%)",
@@ -52,9 +54,6 @@ export default function Home() {
           }}
           aria-hidden
         />
-        <div className="relative z-10">
-          <AudioRecord />
-        </div>
       </section>
 
       <section className="relative z-0 px-4 pb-12">
