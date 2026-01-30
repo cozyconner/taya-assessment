@@ -18,7 +18,6 @@ A Next.js application that allows users to record audio notes and automatically 
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
 - **State Management**: Zustand 5.0.10
-- **Utilities**: clsx, tailwind-merge
 
 ### Backend
 - **Runtime**: Node.js
