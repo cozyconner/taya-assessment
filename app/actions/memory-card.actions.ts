@@ -36,8 +36,13 @@ export async function createMemoryCardFromAudioAction(
     return { ok: false, error: "Missing or invalid audio file" };
   }
 
+  // Quick server-side guardrail: very small blobs are almost always silence/container-only.
+  if (audio.size < 2000) {
+    return { ok: false, error: "Couldn't hear audio. Please try again and speak clearly." };
+  }
+
   const buffer = await audio.arrayBuffer();
-  if (buffer.byteLength === 0) {
+  if (buffer.byteLength < 2000) {
     return { ok: false, error: "Couldn't hear audio. Please try again and speak clearly." };
   }
 

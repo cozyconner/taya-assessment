@@ -23,6 +23,8 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
     null
   );
 
+  const hasCards = groupedMemoryCards.length > 0 && groupedMemoryCards.some(group => group.cards.length > 0);
+
   function renderCardList(cards: MemoryCardDisplay[]) {
     return (
       <ul className="flex flex-col gap-3">
@@ -43,7 +45,11 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
       <section data-id="memoryCardsComponent" className="relative z-0 px-4 pb-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-stone-900">Your moments</h2>
+            {hasCards ? (
+              <h2 className="text-xl font-bold text-stone-900">Your moments</h2>
+            ) : (
+              <div />
+            )}
             {isAdmin && (
               <Switch
                 checked={offlineMode}
@@ -58,16 +64,24 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
             )}
           </div>
 
-          <div className="flex flex-col gap-6">
-            {groupedMemoryCards.map(({ label, cards }) => (
-              <div key={label}>
-                <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
-                  {label}
-                </h3>
-                {renderCardList(cards)}
-              </div>
-            ))}
-          </div>
+          {hasCards ? (
+            <div className="flex flex-col gap-6">
+              {groupedMemoryCards.map(({ label, cards }) => (
+                <div key={label}>
+                  <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
+                    {label}
+                  </h3>
+                  {renderCardList(cards)}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-center text-lg font-medium text-stone-700">
+                Create your first memory card
+              </p>
+            </div>
+          )}
         </div>
 
       </section>

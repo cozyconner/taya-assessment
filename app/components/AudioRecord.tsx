@@ -23,12 +23,11 @@ const SILENCE_DURATION_MS = 2000;
 const OVERALL_AVG_LOW_THRESHOLD = 0.002;
 /** RMS above this = "we're hearing you" */
 const SPEECH_DETECTED_THRESHOLD = 0.02;
+/** Guardrails to avoid uploading empty / useless audio */
+// If we auto-stop after 2000ms of silence, a clip of ~2750ms is almost certainly "no useful audio".
+const MAX_EMPTY_RECORDING_MS = 2000 + 750;
 
-type AudioRecordProps = {
-  centered?: boolean;
-};
-
-export default function AudioRecord({ centered = false }: AudioRecordProps) {
+export default function AudioRecord() {
   const offlineMode = useGlobalControls((s) => s.offlineMode);
   const offlineModeRef = useRef(offlineMode);
   offlineModeRef.current = offlineMode;
@@ -37,7 +36,6 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
   const [transcription, setTranscription] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
   const [smoothedLevel, setSmoothedLevel] = useState(0);
-  const [silenceWarning, setSilenceWarning] = useState<string | null>(null);
   const [recordError, setRecordError] = useState<string | null>(null);
 
   const smoothedLevelRef = useRef(0);
@@ -53,6 +51,7 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
   const isRecordingRef = useRef(false);
   const silenceAutoStopFiredRef = useRef(false);
   const stopRecordingRef = useRef<() => void>(() => { });
+  const recordingStartMsRef = useRef<number | null>(null);
   const router = useRouter();
 
   const isExpanded = recordState !== "idle";
@@ -92,7 +91,6 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
     setAudioLevel(0);
     setSmoothedLevel(0);
     smoothedLevelRef.current = 0;
-    setSilenceWarning(null);
   }, []);
 
   const startLevelMeter = useCallback((stream: MediaStream) => {
@@ -133,7 +131,6 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
         else if (now - silenceStartRef.current >= SILENCE_DURATION_MS) {
           if (!silenceAutoStopFiredRef.current) {
             silenceAutoStopFiredRef.current = true;
-            setSilenceWarning("No sound detected. Stopping recording.");
             isRecordingRef.current = false;
             stopRecordingRef.current();
           }
@@ -151,12 +148,12 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
   const handleToggleRecord = useCallback(async () => {
     if (recordState === "idle") {
       setRecordError(null);
-      setSilenceWarning(null);
       silenceStartRef.current = null;
       silenceAutoStopFiredRef.current = false;
       smoothedLevelRef.current = 0;
       setSmoothedLevel(0);
       rmsHistoryRef.current = [];
+      recordingStartMsRef.current = null;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -169,16 +166,20 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
         };
         recorder.onstop = async () => {
           const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+          const elapsedMs =
+            recordingStartMsRef.current == null ? 0 : Date.now() - recordingStartMsRef.current;
+          recordingStartMsRef.current = null;
+
           const avg =
             rmsHistoryRef.current.length > 0
               ? rmsHistoryRef.current.reduce((a, b) => a + b, 0) / rmsHistoryRef.current.length
               : 0;
           const isTooQuiet = avg < OVERALL_AVG_LOW_THRESHOLD;
+          const isEmptyOrTooShort = elapsedMs > 0 && elapsedMs <= MAX_EMPTY_RECORDING_MS;
 
           if (offlineModeRef.current) {
             setRecordState("done");
             setTranscription("Not saved (listening only)");
-            setSilenceWarning(isTooQuiet ? "Recording was very quiet. You may want to record again." : null);
             setTimeout(() => {
               setRecordState("idle");
               setTranscription("");
@@ -186,14 +187,20 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
             return;
           }
 
+          // If we stopped due to 2s of silence, elapsed will be ~2000ms.
+          // Treat anything <= 2750ms as "nothing useful" and never upload.
+          if (isEmptyOrTooShort) {
+            setRecordState("done");
+            setTranscription("");
+            setRecordState("idle");
+            return;
+          }
+
+          // Secondary guardrail: if it *wasn't* the auto-stop case, still block if it's effectively silence.
           if (isTooQuiet) {
             setRecordState("done");
-            setSilenceWarning("Recording was too quiet. No audio sent—try again and speak clearly.");
             setTranscription("");
-            setTimeout(() => {
-              setRecordState("idle");
-              setSilenceWarning(null);
-            }, 2500);
+            setRecordState("idle");
             return;
           }
 
@@ -208,7 +215,6 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
           if (result.ok) {
             setRecordState("done");
             setTranscription(result.card.title);
-            setSilenceWarning(null);
             router.refresh();
             setRecordState("idle");
             setTranscription("");
@@ -222,6 +228,8 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
         };
 
         recorder.start(100);
+        // Timestamp *when recording actually starts*, not when the user clicks.
+        recordingStartMsRef.current = Date.now();
         mediaRecorderRef.current = recorder;
         isRecordingRef.current = true;
         setRecordState("recording");
@@ -229,6 +237,7 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
         startLevelMeter(stream);
       } catch (err) {
         isRecordingRef.current = false;
+        recordingStartMsRef.current = null;
         setRecordError(
           err instanceof Error ? err.message : "Microphone access denied or unavailable."
         );
@@ -268,11 +277,7 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
     <div
       className={cn(
         "overflow-hidden transition-all duration-500 ease-out",
-        isExpanded 
-          ? "fixed inset-0 z-20" 
-          : centered 
-            ? "relative z-20" 
-            : "fixed top-0 left-0 right-0 z-20"
+        isExpanded ? "fixed inset-0 z-20" : "fixed top-0 left-0 right-0 z-20"
       )}
     >
       <div
@@ -389,11 +394,6 @@ export default function AudioRecord({ centered = false }: AudioRecordProps) {
                   )}
                 </button>
               </div>
-              {silenceWarning && (
-                <p className="max-w-sm text-center text-sm font-medium text-amber-800">
-                  {silenceWarning}
-                </p>
-              )}
               {(recordState === "error" && recordError) ? (
                 <div className="relative w-full max-w-md">
                   <p className="text-center text-lg leading-relaxed text-red-800">{recordError}</p>

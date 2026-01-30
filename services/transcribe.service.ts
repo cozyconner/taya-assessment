@@ -5,6 +5,8 @@
 
 const DEEPGRAM_BASE = "https://api.deepgram.com/v1/listen";
 const MIN_TRANSCRIPT_LENGTH = 2;
+// Server-side safety net: avoid paying Deepgram for near-empty uploads
+const MIN_AUDIO_BYTES = 30000;
 
 export interface TranscribeResult {
   transcript: string;
@@ -19,6 +21,10 @@ export async function transcribeAudio_service(
   audioBuffer: ArrayBuffer,
   mimeType: string = "audio/webm"
 ): Promise<TranscribeResult> {
+  if (audioBuffer.byteLength < MIN_AUDIO_BYTES) {
+    throw new Error("Couldn't hear audio. Please try again and speak clearly.");
+  }
+
   const apiKey = process.env.DEEPGRAM_API_KEY;
   if (!apiKey) {
     throw new Error("DEEPGRAM_API_KEY is not set");
