@@ -126,7 +126,7 @@ export default function MemoryCard({
     return (
       <div
         className={cn(
-          "fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/15 backdrop-blur-sm transition-opacity duration-200 ease-out",
+          "fixed inset-0 z-50 overflow-y-auto bg-stone-900/15 backdrop-blur-sm transition-opacity duration-200 ease-out",
           backdropOpacity
         )}
         aria-modal
@@ -139,44 +139,56 @@ export default function MemoryCard({
           className="absolute inset-0 z-0"
           aria-label="Close"
         />
-        <div
-          className={cn(
-            "relative z-10 w-full max-w-lg rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xl transition-all duration-200 ease-out",
-            panelOpacity
-          )}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="absolute right-4 top-4 z-20">
-            {threeDotsMenu}
-          </div>
-          <div className="pr-8">
-            <h2
-              id="memory-detail-title"
-              className="text-lg font-semibold leading-tight text-stone-900"
-            >
-              {card.title}
-            </h2>
-            <p className="mt-1 text-sm text-stone-500">{timeLong}</p>
-          </div>
-
-          <p className="mt-3 text-sm leading-relaxed text-stone-700">
-            {card.transcript}
-          </p>
-
-          <MemoryCardTags
-            mood={card.mood}
-            categories={card.categories}
-            className="mt-4"
-          />
-
-          {card.actionItems.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                Action items
-              </h3>
-              {renderActionItems(card.actionItems)}
+        <div className="min-h-full flex items-center justify-center p-4">
+          <div
+            className={cn(
+              "relative z-10 w-full max-w-lg rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xl transition-all duration-200 ease-out",
+              panelOpacity
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute right-4 top-4 z-20">
+              {threeDotsMenu}
             </div>
-          )}
+            <div className="pr-8">
+              <h2
+                id="memory-detail-title"
+                className="text-lg font-semibold leading-tight text-stone-900"
+              >
+                {card.title}
+              </h2>
+              <p className="mt-1 text-sm text-stone-500">{timeLong}</p>
+            </div>
+
+            <p className="mt-3 text-sm leading-relaxed text-stone-700">
+              {card.transcript}
+            </p>
+
+            <MemoryCardTags
+              mood={card.mood}
+              categories={card.categories}
+              className="mt-4"
+            />
+
+            {card.actionItems.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                  Action items
+                </h3>
+                {renderActionItems(card.actionItems)}
+              </div>
+            )}
+
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2 text-sm font-medium text-white bg-teal-500 rounded-[200px] hover:bg-teal-700 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

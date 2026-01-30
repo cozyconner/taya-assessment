@@ -144,7 +144,7 @@ export default function AudioRecord() {
     animationFrameRef.current = requestAnimationFrame(computeRMS);
   }, []);
 
-  const handleToggle = useCallback(async () => {
+  const handleToggleRecord = useCallback(async () => {
     if (recordState === "idle") {
       setRecordError(null);
       setSilenceWarning(null);
@@ -198,8 +198,6 @@ export default function AudioRecord() {
 
           const formData = new FormData();
           formData.set("audio", blob, "recording.webm");
-
-          debugger;
 
           const result = await createMemoryCardFromAudioAction(formData);
 
@@ -355,7 +353,7 @@ export default function AudioRecord() {
                 )}
                 <button
                   type="button"
-                  onClick={handleToggle}
+                  onClick={handleToggleRecord}
                   disabled={recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"}
                   className={cn(
                     "relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:hover:scale-100",
@@ -421,7 +419,7 @@ export default function AudioRecord() {
               <button
                 data-id="audioRecordButton"
                 type="button"
-                onClick={handleToggle}
+                onClick={handleToggleRecord}
                 className="relative flex h-16 w-16 items-center justify-center rounded-full bg-teal-500 shadow-md transition-transform hover:scale-105 active:scale-95"
                 aria-label="Start recording"
               >

@@ -3,6 +3,10 @@ import { transcribeAudio_service, isTranscriptTooShort_service } from "@/service
 
 const FRIENDLY_SILENCE_MESSAGE = "Couldn't hear audio. Please try again and speak clearly.";
 
+// Increase body size limit for large audio files
+export const maxDuration = 60; // 60 seconds max execution time
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
