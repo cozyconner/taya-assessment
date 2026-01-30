@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMemoryCard } from "@/app/actions/memory-card.actions";
 import MemoryCardTags from "@/app/components/MemoryCardTags";
@@ -30,18 +30,13 @@ export default function MemoryCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  function handleClose() {
-    if (isClosing) return;
+  const handleClose = useCallback(() => {
+    if (isClosing) {
+      return;
+    }
     setIsClosing(true);
     setTimeout(() => onClose?.(), DURATION_MS);
-  }
-
-  function handleEscape(e: KeyboardEvent) {
-    if (e.key === "Escape") {
-      if (menuOpen) setMenuOpen(false);
-      else handleClose();
-    }
-  }
+  }, [isClosing, onClose]);
 
   async function handleDelete() {
     setIsDeleting(true);
@@ -49,7 +44,10 @@ export default function MemoryCard({
     setIsDeleting(false);
     setMenuOpen(false);
     if (result.ok) {
-      if (isDetail && onClose) handleClose();
+      if (isDetail && onClose) {
+        handleClose();
+      }
+
       router.refresh();
     }
   }
@@ -59,12 +57,6 @@ export default function MemoryCard({
     const t = requestAnimationFrame(() => setIsVisible(true));
     return () => cancelAnimationFrame(t);
   }, [isDetail]);
-
-  useEffect(() => {
-    if (!isDetail) return;
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isDetail, handleEscape]);
 
   useEffect(() => {
     if (!menuOpen) return;
