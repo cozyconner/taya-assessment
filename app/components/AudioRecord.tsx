@@ -343,7 +343,12 @@ export default function AudioRecord() {
                   type="button"
                   onClick={handleToggle}
                   disabled={recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing"}
-                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className={cn(
+                    "relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:cursor-not-allowed disabled:hover:scale-100",
+                    (recordState === "uploading" || recordState === "transcribing" || recordState === "synthesizing")
+                      ? "animate-pulse"
+                      : "disabled:opacity-70"
+                  )}
                   aria-label={
                     recordState === "recording"
                       ? "Stop recording"
@@ -369,36 +374,11 @@ export default function AudioRecord() {
                   {silenceWarning}
                 </p>
               )}
-              <div className="relative min-h-[5.5rem] w-full max-w-md">
-                {recordState === "error" && recordError ? (
+              {(recordState === "error" && recordError) ? (
+                <div className="relative w-full max-w-md">
                   <p className="text-center text-lg leading-relaxed text-red-800">{recordError}</p>
-                ) : recordState === "uploading" ||
-                  recordState === "transcribing" ||
-                  recordState === "synthesizing" ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-6" aria-hidden>
-                    <div className="flex items-end justify-center gap-1.5 h-10" aria-hidden>
-                      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-                        <span
-                          key={i}
-                          className="w-1.5 rounded-full bg-teal-500 animate-processing-bar origin-bottom"
-                          style={{
-                            height: "1.5rem",
-                            animationDelay: `${i * 0.1}s`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm font-medium text-teal-800/90">
-                      Processing your memory...
-                    </p>
-                  </div>
-                ) : (
-                  // <p className="text-center text-lg leading-relaxed text-black">
-                  //   {transcription || (recordState === "recording" ? "Listening..." : "")}
-                  // </p>
-                  null
-                )}
-              </div>
+                </div>
+              ) : null}
             </div>
             {/* {isHearingYou && (
               <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pb-8">
