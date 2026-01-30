@@ -1,4 +1,4 @@
-import Tag from "@/app/components/Tag";
+import Tag from "@/ui/Tag";
 
 function formatMood(mood: string): string {
   return mood.charAt(0).toUpperCase() + mood.slice(1).toLowerCase();

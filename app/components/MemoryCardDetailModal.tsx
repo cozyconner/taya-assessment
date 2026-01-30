@@ -1,6 +1,6 @@
 "use client";
 
-import Modal from "@/app/components/Modal";
+import Modal from "@/ui/Modal";
 import MemoryCard from "@/app/components/MemoryCard";
 import type { MemoryCardDisplay } from "@/types/types";
 

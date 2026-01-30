@@ -1,41 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMemoryCard } from "@/app/actions/memory-card.actions";
 import MemoryCardTags from "@/app/components/MemoryCardTags";
+import MenuButton from "@/ui/MenuButton";
 import type { MemoryCardDisplay } from "@/types/types";
+import { formatTimeLong, formatTimeShort } from "@/lib/utils";
 
 const DURATION_MS = 200;
-
-function formatTimeShort(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(date);
-}
-
-function formatTimeLong(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(date);
-}
-
-function renderActionItems(actionItems: string[]) {
-  return (
-    <ul className="mt-2 list-outside list-disc space-y-1 pl-4 pr-0 text-sm text-stone-700 [&_li::marker]:text-stone-500">
-      {actionItems.map((item, i) => (
-        <li key={i}>{item}</li>
-      ))}
-    </ul>
-  );
-}
 
 type MemoryCardProps = {
   card: MemoryCardDisplay;
@@ -57,23 +30,20 @@ export default function MemoryCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleClose = useCallback(() => {
+  function handleClose() {
     if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => onClose?.(), DURATION_MS);
-  }, [onClose, isClosing]);
+  }
 
-  const handleEscape = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (menuOpen) setMenuOpen(false);
-        else handleClose();
-      }
-    },
-    [handleClose, menuOpen]
-  );
+  function handleEscape(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      if (menuOpen) setMenuOpen(false);
+      else handleClose();
+    }
+  }
 
-  const handleDelete = useCallback(async () => {
+  async function handleDelete() {
     setIsDeleting(true);
     const result = await deleteMemoryCard(card.id);
     setIsDeleting(false);
@@ -82,7 +52,7 @@ export default function MemoryCard({
       if (isDetail && onClose) handleClose();
       router.refresh();
     }
-  }, [card.id, isDetail, onClose, handleClose, router]);
+  }
 
   useEffect(() => {
     if (!isDetail) return;
@@ -114,30 +84,25 @@ export default function MemoryCard({
       ? `${card.transcript.slice(0, 120).trim()}...`
       : card.transcript;
 
-  function renderMenuButton() {
+  function renderActionItems(actionItems: string[]) {
     return (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setMenuOpen((open) => !open);
-        }}
-        className="rounded-full p-1.5 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
-        aria-label="Options"
-        aria-expanded={menuOpen}
-      >
-        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="6" r="1.5" />
-          <circle cx="12" cy="12" r="1.5" />
-          <circle cx="12" cy="18" r="1.5" />
-        </svg>
-      </button>
+      <ul className="mt-2 list-outside list-disc space-y-1 pl-4 pr-0 text-sm text-stone-700 [&_li::marker]:text-stone-500">
+        {actionItems.map((item, i) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
     );
   }
 
   const threeDotsMenu = (
     <div ref={menuRef} className="relative z-20">
-      {renderMenuButton()}
+      <MenuButton
+        expanded={menuOpen}
+        onClick={(e) => {
+          e.stopPropagation();
+          setMenuOpen((open) => !open);
+        }}
+      />
       {menuOpen && (
         <div className="absolute right-0 top-full mt-1 min-w-[120px] rounded-lg border border-stone-200 bg-white py-1 shadow-lg">
           <button

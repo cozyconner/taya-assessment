@@ -3,6 +3,8 @@
 import { useState } from "react";
 import MemoryCard from "@/app/components/MemoryCard";
 import MemoryCardDetailModal from "@/app/components/MemoryCardDetailModal";
+import Switch from "@/ui/Switch";
+import { useGlobalControls } from "@/stores/useGlobalControls";
 import type { MemoryCardDisplay } from "@/types/types";
 
 type Group = { label: string; cards: MemoryCardDisplay[] };
@@ -12,6 +14,8 @@ type MemoryCardsProps = {
 };
 
 export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
+  const { offlineMode, setOfflineMode } = useGlobalControls();
+
   const [selectedCard, setSelectedCard] = useState<MemoryCardDisplay | null>(
     null
   );
@@ -37,6 +41,16 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-stone-900">Your moments</h2>
+            <Switch
+              checked={offlineMode}
+              onCheckedChange={setOfflineMode}
+              label="Listening only"
+              aria-label={
+                offlineMode
+                  ? "Listening only (audio not sent)"
+                  : "Send audio to server"
+              }
+            />
           </div>
 
           <div className="flex flex-col gap-6">

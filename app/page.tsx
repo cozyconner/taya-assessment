@@ -15,18 +15,26 @@ function groupCardsByDate(cards: MemoryCardDisplay[]) {
   const olderCards: MemoryCardDisplay[] = [];
 
   for (const card of cards) {
-    const d = new Date(card.createdAt);
-    d.setHours(0, 0, 0, 0);
-    if (d.getTime() === today.getTime()) todayCards.push(card);
-    else if (d.getTime() === yesterday.getTime()) yesterdayCards.push(card);
-    else olderCards.push(card);
+    const date = new Date(card.createdAt);
+    date.setHours(0, 0, 0, 0);
+    if (date.getTime() === today.getTime()) {
+      todayCards.push(card);
+    } else if (date.getTime() === yesterday.getTime()) {
+      yesterdayCards.push(card);
+    } else {
+      olderCards.push(card);
+    }
   }
 
-  if (todayCards.length) groups.push({ label: "Today", cards: todayCards });
-  if (yesterdayCards.length)
+  if (todayCards.length) {
+    groups.push({ label: "Today", cards: todayCards });
+  }
+  if (yesterdayCards.length) {
     groups.push({ label: "Yesterday", cards: yesterdayCards });
-  if (olderCards.length)
+  }
+  if (olderCards.length) {
     groups.push({ label: "Earlier", cards: olderCards });
+  }
 
   return groups;
 }

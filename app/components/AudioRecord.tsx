@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMemoryCardFromAudio } from "@/app/actions/memory-card.actions";
+import { useGlobalControls } from "@/stores/useGlobalControls";
 import type { AudioRecordState } from "@/types/types";
 
 const TEAL = {
@@ -20,6 +21,10 @@ const OVERALL_AVG_LOW_THRESHOLD = 0.002;
 const SPEECH_DETECTED_THRESHOLD = 0.02;
 
 export default function AudioRecord() {
+  const offlineMode = useGlobalControls((s) => s.offlineMode);
+  const offlineModeRef = useRef(offlineMode);
+  offlineModeRef.current = offlineMode;
+
   const [recordState, setRecordState] = useState<AudioRecordState>("idle");
   const [transcription, setTranscription] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
@@ -162,6 +167,17 @@ export default function AudioRecord() {
               : 0;
           if (avg < OVERALL_AVG_LOW_THRESHOLD) {
             setSilenceWarning("Recording was very quiet. You may want to record again.");
+          }
+
+          if (offlineModeRef.current) {
+            setRecordState("done");
+            setTranscription("Not saved (listening only)");
+            setSilenceWarning(null);
+            setTimeout(() => {
+              setRecordState("idle");
+              setTranscription("");
+            }, 1500);
+            return;
           }
 
           setRecordState("uploading");
@@ -381,7 +397,7 @@ export default function AudioRecord() {
                 )}
               </div>
             </div>
-            {isHearingYou && (
+            {/* {isHearingYou && (
               <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pb-8">
                 <div
                   className="flex items-center gap-2 rounded-full bg-emerald-500/90 px-4 py-2 text-sm font-medium text-white shadow-md"
@@ -395,7 +411,7 @@ export default function AudioRecord() {
                   We're hearing you
                 </div>
               </div>
-            )}
+            )} */}
           </>
         ) : (
           <div className="flex flex-col items-center gap-4">
