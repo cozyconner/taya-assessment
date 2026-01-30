@@ -46,6 +46,9 @@ export default function MemoryCard({
     setIsDeleting(false);
     setMenuOpen(false);
     if (result.ok) {
+      // If this card exists in the optimistic client store (newly created),
+      // router.refresh() won't remove it. Explicitly remove it here.
+      removeOptimisticCard(card.id);
       if (isDetail && onClose) {
         handleClose();
       }
