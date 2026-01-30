@@ -14,6 +14,8 @@ const RMS_SILENCE_THRESHOLD = 0.01;
 const SILENCE_DURATION_MS = 1500;
 /** Overall average RMS below this = "very quiet" recording */
 const OVERALL_AVG_LOW_THRESHOLD = 0.008;
+/** RMS above this = "we're hearing you" */
+const SPEECH_DETECTED_THRESHOLD = 0.02;
 
 export default function AudioRecord() {
   const [recordState, setRecordState] = useState<AudioRecordState>("idle");
@@ -187,6 +189,7 @@ export default function AudioRecord() {
 
   const normalizedLevel = Math.min(1, audioLevel * 8);
   const orbGlow = 12 + normalizedLevel * 24;
+  const isHearingYou = recordState === "recording" && audioLevel >= SPEECH_DETECTED_THRESHOLD;
 
   return (
     <div
@@ -253,40 +256,57 @@ export default function AudioRecord() {
         )}
 
         {isExpanded ? (
-          <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-6 pt-12">
-            <p className="text-center text-sm font-medium text-teal-800/80">
-              Live transcription • Auto-stops after silence
-            </p>
-            <div
-              className="relative rounded-full p-1 transition-shadow duration-75"
-              style={{
-                background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
-                boxShadow: `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}`,
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleToggle}
-                className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95"
-                aria-label={recordState === "recording" ? "Stop recording" : "Record"}
+          <>
+            <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-6 pt-12">
+              <p className="text-center text-sm font-medium text-teal-800/80">
+                Live transcription • Auto-stops after silence
+              </p>
+              <div
+                className="relative rounded-full p-1 transition-shadow duration-75"
+                style={{
+                  background: `radial-gradient(circle, ${TEAL.dark} 0%, rgb(20 184 166 / 0.4) 40%, transparent 70%)`,
+                  boxShadow: `0 0 ${orbGlow}px ${TEAL.mid}, 0 0 ${orbGlow * 1.5}px ${TEAL.light}`,
+                }}
               >
-                <span className="flex gap-1">
-                  <span className="h-6 w-1.5 rounded-full bg-white" />
-                  <span className="h-6 w-1.5 rounded-full bg-white" />
-                </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={handleToggle}
+                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-teal-500 shadow-lg transition-transform duration-75 hover:scale-105 active:scale-95"
+                  aria-label={recordState === "recording" ? "Stop recording" : "Record"}
+                >
+                  <span className="flex gap-1">
+                    <span className="h-6 w-1.5 rounded-full bg-white" />
+                    <span className="h-6 w-1.5 rounded-full bg-white" />
+                  </span>
+                </button>
+              </div>
+              {silenceWarning && (
+                <p className="max-w-sm text-center text-sm font-medium text-amber-800">
+                  {silenceWarning}
+                </p>
+              )}
+              <div className="min-h-[4rem] max-w-md text-center">
+                <p className="text-lg leading-relaxed text-black">
+                  {transcription || "Listening..."}
+                </p>
+              </div>
             </div>
-            {silenceWarning && (
-              <p className="max-w-sm text-center text-sm font-medium text-amber-800">
-                {silenceWarning}
-              </p>
+            {isHearingYou && (
+              <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pb-8">
+                <div
+                  className="flex items-center gap-2 rounded-full bg-emerald-500/90 px-4 py-2 text-sm font-medium text-white shadow-md"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                  </span>
+                  We're hearing you
+                </div>
+              </div>
             )}
-            <div className="min-h-[4rem] max-w-md text-center">
-              <p className="text-lg leading-relaxed text-black">
-                {transcription || "Listening..."}
-              </p>
-            </div>
-          </div>
+          </>
         ) : (
           <div className="flex flex-col items-center gap-4">
             <div
