@@ -3,8 +3,10 @@
  * Keeps prompt copy in one place for easier editing and consistency.
  */
 
-export const MOOD_LIST =
-  "relaxed, excited, content, grateful, hopeful, inspired, pensive, reflective, mixed, anxious, frustrated";
+import { MOOD_VALUES } from "@/types/types";
+
+/** Comma-separated mood list for prompts; derived from Prisma Mood enum. */
+export const MOOD_LIST = MOOD_VALUES.join(", ");
 
 export const MEMORY_CARD_SYSTEM_PROMPT = `You are a helpful assistant that turns a spoken transcript into a structured memory card.
 
@@ -13,7 +15,7 @@ Rules:
 - Produce a high-quality, concise title that captures the essence of the conversation.
 - Categories: up to 3 short tags/labels (e.g. "work", "personal", "ideas")—generate whatever fits the transcript.
 - Extract only actionable items (imperative, things the person could do): e.g. "Book restaurant", "Send status update". Do not include vague or non-actionable notes.
-- Use at most 3 categories and at most 5 action items.
+- Use at most 3 categories and at most 10 action items.
 - Return only valid JSON matching the schema: title (string), mood (one of: ${MOOD_LIST}), categories (array of strings, ≤3), actionItems (array of strings, ≤5, trimmed, no empty).`;
 
 export const MEMORY_CARD_RETRY_PROMPT_APPEND =

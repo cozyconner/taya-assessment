@@ -166,18 +166,27 @@ export default function AudioRecord() {
             rmsHistoryRef.current.length > 0
               ? rmsHistoryRef.current.reduce((a, b) => a + b, 0) / rmsHistoryRef.current.length
               : 0;
-          if (avg < OVERALL_AVG_LOW_THRESHOLD) {
-            setSilenceWarning("Recording was very quiet. You may want to record again.");
-          }
+          const isTooQuiet = avg < OVERALL_AVG_LOW_THRESHOLD;
 
           if (offlineModeRef.current) {
             setRecordState("done");
             setTranscription("Not saved (listening only)");
-            setSilenceWarning(null);
+            setSilenceWarning(isTooQuiet ? "Recording was very quiet. You may want to record again." : null);
             setTimeout(() => {
               setRecordState("idle");
               setTranscription("");
             }, 1500);
+            return;
+          }
+
+          if (isTooQuiet) {
+            setRecordState("done");
+            setSilenceWarning("Recording was too quiet. No audio sent—try again and speak clearly.");
+            setTranscription("");
+            setTimeout(() => {
+              setRecordState("idle");
+              setSilenceWarning(null);
+            }, 2500);
             return;
           }
 
@@ -316,7 +325,7 @@ export default function AudioRecord() {
 
         {isExpanded ? (
           <>
-            <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-6 pt-12">
+            <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-6">
               <div className="relative rounded-full p-1 w-20 h-20 flex items-center justify-center">
                 {recordState === "recording" && (
                   <div
