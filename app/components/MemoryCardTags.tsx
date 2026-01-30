@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import Tag from "@/ui/Tag";
 
 function formatMood(mood: string): string {
@@ -22,9 +23,7 @@ export default function MemoryCardTags({
     : categories;
 
   return (
-    <div
-      className={`flex flex-wrap items-center gap-2${className ? ` ${className}` : ""}`}
-    >
+    <div data-id="memoryCardTags" className={cn("flex flex-wrap items-center gap-2", className)}>
       <Tag variant="teal">{formatMood(mood)}</Tag>
       {displayCategories.map((cat) => (
         <Tag key={cat}>{cat}</Tag>

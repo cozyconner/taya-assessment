@@ -6,7 +6,7 @@ import { deleteMemoryCard } from "@/app/actions/memory-card.actions";
 import MemoryCardTags from "@/app/components/MemoryCardTags";
 import MenuButton from "@/ui/MenuButton";
 import type { MemoryCardDisplay } from "@/types/types";
-import { formatTimeLong, formatTimeShort } from "@/lib/utils";
+import { cn, formatTimeLong, formatTimeShort } from "@/lib/utils";
 
 const DURATION_MS = 200;
 
@@ -133,7 +133,10 @@ export default function MemoryCard({
 
     return (
       <div
-        className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/15 backdrop-blur-sm transition-opacity duration-200 ease-out ${backdropOpacity}`}
+        className={cn(
+          "fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/15 backdrop-blur-sm transition-opacity duration-200 ease-out",
+          backdropOpacity
+        )}
         aria-modal
         aria-labelledby="memory-detail-title"
         role="dialog"
@@ -145,7 +148,10 @@ export default function MemoryCard({
           aria-label="Close"
         />
         <div
-          className={`relative z-10 w-full max-w-lg rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xl transition-all duration-200 ease-out ${panelOpacity}`}
+          className={cn(
+            "relative z-10 w-full max-w-lg rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xl transition-all duration-200 ease-out",
+            panelOpacity
+          )}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="absolute right-4 top-4 z-20">
