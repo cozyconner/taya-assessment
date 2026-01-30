@@ -40,7 +40,7 @@ export default function MemoryCard({
 
   async function handleDelete() {
     setIsDeleting(true);
-    const result = await deleteMemoryCardAction(card.id);
+    const result = await deleteMemoryCardAction({ id: card.id });
     setIsDeleting(false);
     setMenuOpen(false);
     if (result.ok) {

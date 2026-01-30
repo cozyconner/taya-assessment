@@ -4,27 +4,23 @@ import { transcribeAudio_service, isTranscriptTooShort_service } from "@/service
 import { generateMemoryCard_service } from "@/services/memory-card.service";
 import { prisma } from "@/lib/db";
 import type { Mood } from "@prisma/client";
-import type { MemoryCardDisplay } from "@/types/types";
+import type {
+  MemoryCardDto,
+  CreateMemoryCardDto,
+  DeleteMemoryCardDto,
+} from "@/types/types";
 
-export async function getMemoryCardsAction(): Promise<MemoryCardDisplay[]> {
+export async function getMemoryCardsAction(): Promise<MemoryCardDto[]> {
   const cards = await prisma.memoryCard.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
   });
 
-  return cards.map((c) => ({
-    id: c.id,
-    createdAt: c.createdAt,
-    title: c.title,
-    transcript: c.transcript,
-    mood: c.mood,
-    categories: c.categories,
-    actionItems: c.actionItems,
-  }));
+  return cards;
 }
 
 export type CreateMemoryCardFromAudioResult =
-  | { ok: true; card: MemoryCardDisplay }
+  | { ok: true; card: MemoryCardDto }
   | { ok: false; error: string };
 
 /**
@@ -55,27 +51,21 @@ export async function createMemoryCardFromAudioAction(
 
     const generated = await generateMemoryCard_service(transcript);
 
+    const createPayload: CreateMemoryCardDto = {
+      transcript,
+      title: generated.title,
+      mood: generated.mood as Mood,
+      categories: generated.categories,
+      actionItems: generated.actionItems,
+    };
+
     const card = await prisma.memoryCard.create({
-      data: {
-        transcript,
-        title: generated.title,
-        mood: generated.mood as Mood,
-        categories: generated.categories,
-        actionItems: generated.actionItems,
-      },
+      data: createPayload,
     });
 
     return {
       ok: true,
-      card: {
-        id: card.id,
-        createdAt: card.createdAt,
-        title: card.title,
-        transcript: card.transcript,
-        mood: card.mood,
-        categories: card.categories,
-        actionItems: card.actionItems,
-      },
+      card,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Something went wrong.";
@@ -85,9 +75,11 @@ export async function createMemoryCardFromAudioAction(
 
 export type DeleteMemoryCardResult = { ok: true } | { ok: false; error: string };
 
-export async function deleteMemoryCardAction(id: string): Promise<DeleteMemoryCardResult> {
+export async function deleteMemoryCardAction(
+  payload: DeleteMemoryCardDto
+): Promise<DeleteMemoryCardResult> {
   try {
-    await prisma.memoryCard.delete({ where: { id } });
+    await prisma.memoryCard.delete({ where: { id: payload.id } });
     return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to delete";

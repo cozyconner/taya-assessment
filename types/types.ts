@@ -5,7 +5,7 @@
  * - 3 neutral (including mixed)
  * - 2 negative
  */
-import { Mood } from "@prisma/client";
+import { Mood, Prisma } from "@prisma/client";
 export { Mood };
 
 /** Mood enum values for Zod/validation; must stay in sync with Prisma Mood. */
@@ -24,6 +24,38 @@ export type AudioRecordState =
   | "synthesizing"
   | "done"
   | "error";
+
+/**
+ * Base DTO with common fields present in all database entities.
+ */
+export interface BaseDto {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Full MemoryCard DTO.
+ * Uses Prisma type for type safety (already includes id, createdAt, updatedAt).
+ */
+export type MemoryCardDto = Prisma.MemoryCardGetPayload<{}>;
+
+/**
+ * Payload for creating a MemoryCard.
+ * Excludes auto-generated fields (id, createdAt, updatedAt).
+ * Uses Prisma's UncheckedCreateInput for direct field assignment.
+ */
+export type CreateMemoryCardDto = Omit<
+  Prisma.MemoryCardUncheckedCreateInput,
+  "id" | "createdAt" | "updatedAt"
+>;
+
+/**
+ * Payload for deleting a MemoryCard.
+ */
+export interface DeleteMemoryCardDto {
+  id: string;
+}
 
 /** Memory card display type aligned with Prisma MemoryCard schema */
 export interface MemoryCardDisplay {

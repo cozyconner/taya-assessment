@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateMemoryCard_service } from "@/services/memory-card.service";
 import { prisma } from "@/lib/db";
 import type { Mood } from "@prisma/client";
+import type { MemoryCardDto, CreateMemoryCardDto } from "@/types/types";
 
 export async function GET() {
   try {
@@ -10,17 +11,7 @@ export async function GET() {
       take: 50,
     });
 
-    const list = cards.map((c) => ({
-      id: c.id,
-      createdAt: c.createdAt,
-      title: c.title,
-      transcript: c.transcript,
-      mood: c.mood,
-      categories: c.categories,
-      actionItems: c.actionItems,
-    }));
-
-    return NextResponse.json(list);
+    return NextResponse.json(cards);
   } catch (err) {
     console.error("GET /api/memory-card error:", err);
     return NextResponse.json(
@@ -45,25 +36,19 @@ export async function POST(request: Request) {
 
     const generated = await generateMemoryCard_service(transcript);
 
-    const card = await prisma.memoryCard.create({
-      data: {
-        transcript,
-        title: generated.title,
-        mood: generated.mood as Mood,
-        categories: generated.categories,
-        actionItems: generated.actionItems,
-      },
+    const createPayload: CreateMemoryCardDto = {
+      transcript,
+      title: generated.title,
+      mood: generated.mood as Mood,
+      categories: generated.categories,
+      actionItems: generated.actionItems,
+    };
+
+    const card: MemoryCardDto = await prisma.memoryCard.create({
+      data: createPayload,
     });
 
-    return NextResponse.json({
-      id: card.id,
-      createdAt: card.createdAt,
-      title: card.title,
-      transcript: card.transcript,
-      mood: card.mood,
-      categories: card.categories,
-      actionItems: card.actionItems,
-    });
+    return NextResponse.json(card);
   } catch (err) {
     console.error("POST /api/memory-card error:", err);
     return NextResponse.json(
