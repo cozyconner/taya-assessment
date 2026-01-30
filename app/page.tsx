@@ -1,9 +1,9 @@
 import AudioRecordButton from "./components/AudioRecordButton";
-import MemoryCards from "./components/MemoryCards";
+import MemoryCards, { GroupedMemoryCards } from "./components/MemoryCards";
 import { getMemoryCardsAction } from "./actions/memory-card.actions";
 import type { MemoryCardDisplay } from "@/types/types";
 
-function groupCardsByDate(cards: MemoryCardDisplay[]) {
+function groupCardsByDate(memoryCards: MemoryCardDisplay[]): GroupedMemoryCards[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
@@ -14,12 +14,12 @@ function groupCardsByDate(cards: MemoryCardDisplay[]) {
   const yesterdayCards: MemoryCardDisplay[] = [];
   const olderCards: MemoryCardDisplay[] = [];
 
-  for (const card of cards) {
-    const date = new Date(card.createdAt);
-    date.setHours(0, 0, 0, 0);
-    if (date.getTime() === today.getTime()) {
+  for (const card of memoryCards) {
+    const createdAt = new Date(card.createdAt);
+    createdAt.setHours(0, 0, 0, 0);
+    if (createdAt.getTime() === today.getTime()) {
       todayCards.push(card);
-    } else if (date.getTime() === yesterday.getTime()) {
+    } else if (createdAt.getTime() === yesterday.getTime()) {
       yesterdayCards.push(card);
     } else {
       olderCards.push(card);
@@ -42,6 +42,7 @@ function groupCardsByDate(cards: MemoryCardDisplay[]) {
 function renderStickyHeader() {
   return (
     <section
+      data-id="stickyHeader"
       className="sticky top-0 z-10 min-h-[150px] px-4 pt-8 pb-4"
       style={{
         background:
@@ -69,7 +70,9 @@ export default async function MemoryCardPage() {
     <div className="relative min-h-screen bg-[#f5f0e8] font-sans">
       <AudioRecordButton />
       {renderStickyHeader()}
-      <MemoryCards groupedMemoryCards={groupedMemoryCards} />
+      <MemoryCards
+        groupedMemoryCards={groupedMemoryCards}
+      />
     </div>
   );
 }

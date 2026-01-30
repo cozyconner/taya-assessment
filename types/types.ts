@@ -57,15 +57,11 @@ export interface DeleteMemoryCardDto {
   id: string;
 }
 
-/** Memory card display type aligned with Prisma MemoryCard schema */
-export interface MemoryCardDisplay {
-  id: string;
-  createdAt: Date;
-  title: string;
-  transcript: string;
-  mood: string;
-  categories: string[];
-  actionItems: string[];
+/**
+ * Memory card display type for UI components.
+ * Extends MemoryCardDto with client-only UI state for optimistic updates.
+ */
+export type MemoryCardDisplay = MemoryCardDto & {
   /**
    * Client-only UI state for optimistic/temporary cards.
    * - pending: show blurred overlay + spinner
@@ -75,4 +71,4 @@ export interface MemoryCardDisplay {
   uiState?: "pending" | "done" | "error";
   /** Optional error message when uiState === "error". */
   uiError?: string;
-}
+};

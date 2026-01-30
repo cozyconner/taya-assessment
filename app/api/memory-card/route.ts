@@ -34,21 +34,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const generated = await generateMemoryCard_service(transcript);
+    const generatedMemoryCard = await generateMemoryCard_service(transcript);
 
     const createPayload: CreateMemoryCardDto = {
       transcript,
-      title: generated.title,
-      mood: generated.mood as Mood,
-      categories: generated.categories,
-      actionItems: generated.actionItems,
+      title: generatedMemoryCard.title,
+      mood: generatedMemoryCard.mood as Mood,
+      categories: generatedMemoryCard.categories,
+      actionItems: generatedMemoryCard.actionItems,
     };
 
-    const card: MemoryCardDto = await prisma.memoryCard.create({
+    const memoryCard: MemoryCardDto = await prisma.memoryCard.create({
       data: createPayload,
     });
 
-    return NextResponse.json(card);
+    return NextResponse.json(memoryCard);
   } catch (err) {
     console.error("POST /api/memory-card error:", err);
     return NextResponse.json(

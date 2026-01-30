@@ -123,13 +123,12 @@ export default function MemoryCard({
   );
 
   if (isDetail) {
-    const backdropOpacity =
-      isVisible && !isClosing ? "opacity-100" : "opacity-0";
-    const panelOpacity =
-      isVisible && !isClosing ? "opacity-100 scale-100" : "opacity-0 scale-95";
+    const backdropOpacity = isVisible && !isClosing ? "opacity-100" : "opacity-0";
+    const panelOpacity = isVisible && !isClosing ? "opacity-100 scale-100" : "opacity-0 scale-95";
 
     return (
       <div
+        data-id="memoryCardComponent"
         className={cn(
           "fixed inset-0 z-50 overflow-y-auto bg-stone-900/15 backdrop-blur-sm transition-opacity duration-200 ease-out",
           backdropOpacity

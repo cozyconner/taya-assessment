@@ -23,7 +23,10 @@ export default function MemoryCardTags({
     : categories;
 
   return (
-    <div data-id="memoryCardTags" className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div
+      data-id="memoryCardTagsComponent"
+      className={cn("flex flex-wrap items-center gap-2", className)}
+    >
       <Tag variant="teal">{formatMood(mood)}</Tag>
       {displayCategories.map((cat) => (
         <Tag key={cat}>{cat}</Tag>

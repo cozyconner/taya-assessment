@@ -9,28 +9,28 @@ import { useGlobalControls } from "@/stores/useGlobalControls";
 import { useOptimisticMemoryCards } from "@/stores/useOptimisticMemoryCards";
 import type { MemoryCardDisplay } from "@/types/types";
 
-type Group = { label: string; cards: MemoryCardDisplay[] };
+export type GroupedMemoryCards = { label: string; cards: MemoryCardDisplay[] };
 
 type MemoryCardsProps = {
-  groupedMemoryCards: Group[];
+  groupedMemoryCards: GroupedMemoryCards[];
 };
 
 export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
   const { offlineMode, setOfflineMode } = useGlobalControls();
   const optimisticCards = useOptimisticMemoryCards((s) => s.cards);
   const searchParams = useSearchParams();
+
   const isAdmin = searchParams.get("admin") === "1";
 
-  const [selectedCard, setSelectedCard] = useState<MemoryCardDisplay | null>(
-    null
-  );
+  const [selectedCard, setSelectedCard] = useState<MemoryCardDisplay | null>(null);
 
   const hasCards =
     groupedMemoryCards.length > 0 &&
     groupedMemoryCards.some((group) => group.cards.length > 0);
+
   const hasOptimistic = optimisticCards.length > 0;
 
-  const groupsWithOptimistic: Group[] = (() => {
+  const groupsWithOptimistic: GroupedMemoryCards[] = (() => {
     if (!hasOptimistic) return groupedMemoryCards;
 
     const optimisticIdSet = new Set(optimisticCards.map((c) => c.id));
@@ -43,7 +43,7 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
 
     if (idxToday >= 0) {
       const today = dedupedGroups[idxToday];
-      const mergedToday: Group = {
+      const mergedToday: GroupedMemoryCards = {
         ...today,
         cards: [...optimisticCards, ...today.cards],
       };
@@ -64,13 +64,52 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
           <li key={card.id}>
             <MemoryCard
               card={card}
-              onOpenDetail={
-                card.uiState ? undefined : () => setSelectedCard(card)
-              }
+              onOpenDetail={card.uiState ? undefined : () => setSelectedCard(card)}
             />
           </li>
         ))}
       </ul>
+    );
+  }
+
+  function renderAdminSwitch() {
+    if (!isAdmin) return null;
+    return (
+      <Switch
+        checked={offlineMode}
+        onCheckedChange={setOfflineMode}
+        label="Listening only"
+        aria-label={
+          offlineMode
+            ? "Listening only (audio not sent)"
+            : "Send audio to server"
+        }
+      />
+    );
+  }
+
+  function renderMemoryCards() {
+    if (hasCards || hasOptimistic) {
+      return (
+        <div className="flex flex-col gap-6">
+          {groupsWithOptimistic.map(({ label, cards }) => (
+            <div key={label}>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
+                {label}
+              </h3>
+              {renderCardList(cards)}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-center text-lg font-medium text-stone-700">
+          Create your first memory card
+        </p>
+      </div>
     );
   }
 
@@ -82,53 +121,13 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
             {hasCards || hasOptimistic ? (
               <h2 className="text-xl font-bold text-stone-900">Your moments</h2>
             ) : (
-              <div />
+              null
             )}
-            {isAdmin && (
-              <Switch
-                checked={offlineMode}
-                onCheckedChange={setOfflineMode}
-                label="Listening only"
-                aria-label={
-                  offlineMode
-                    ? "Listening only (audio not sent)"
-                    : "Send audio to server"
-                }
-              />
-            )}
+            {renderAdminSwitch()}
           </div>
 
-          {hasCards ? (
-            <div className="flex flex-col gap-6">
-              {groupsWithOptimistic.map(({ label, cards }) => (
-                <div key={label}>
-                  <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
-                    {label}
-                  </h3>
-                  {renderCardList(cards)}
-                </div>
-              ))}
-            </div>
-          ) : hasOptimistic ? (
-            <div className="flex flex-col gap-6">
-              {groupsWithOptimistic.map(({ label, cards }) => (
-                <div key={label}>
-                  <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-stone-700">
-                    {label}
-                  </h3>
-                  {renderCardList(cards)}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-center text-lg font-medium text-stone-700">
-                Create your first memory card
-              </p>
-            </div>
-          )}
+          {renderMemoryCards()}
         </div>
-
       </section>
 
       {/* MODALS */}

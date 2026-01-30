@@ -14,7 +14,7 @@ export default function MemoryCardDetailModal({
   onClose,
 }: MemoryCardDetailModalProps) {
   return (
-    <Modal open={!!card}>
+    <Modal data-id="memoryCardDetailModalComponent" open={!!card}>
       {card ? (
         <MemoryCard card={card} isDetail onClose={onClose} />
       ) : null}

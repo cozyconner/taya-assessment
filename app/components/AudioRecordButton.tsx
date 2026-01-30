@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMemoryCardFromAudioAction } from "@/app/actions/memory-card.actions";
-import { MOCK_MEMORY_CARDS } from "@/app/data";
+import { MOCK_MEMORY_CARDS } from "@/app/data/data";
 import { cn } from "@/lib/utils";
 import { useGlobalControls } from "@/stores/useGlobalControls";
 import { useOptimisticMemoryCards } from "@/stores/useOptimisticMemoryCards";
@@ -315,6 +315,7 @@ export default function AudioRecordButton() {
 
   return (
     <div
+      data-id="audioRecordButtonComponent"
       className={cn(
         "overflow-hidden transition-all duration-500 ease-out",
         isExpanded ? "fixed inset-0 z-20" : "fixed top-0 left-0 right-0 z-20"
