@@ -61,7 +61,8 @@ export async function generateMemoryCard_service(transcript: string): Promise<Me
   }
 
   try {
-    return await attempt();
+    const gptOutput = await attempt();
+    return gptOutput
   } catch (firstError) {
     try {
       return await attempt(MEMORY_CARD_RETRY_PROMPT_APPEND);

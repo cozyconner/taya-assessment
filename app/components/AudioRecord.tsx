@@ -199,6 +199,8 @@ export default function AudioRecord() {
           const formData = new FormData();
           formData.set("audio", blob, "recording.webm");
 
+          debugger;
+
           const result = await createMemoryCardFromAudioAction(formData);
 
           if (result.ok) {
