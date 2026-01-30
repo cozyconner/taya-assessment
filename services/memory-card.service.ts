@@ -27,7 +27,7 @@ export const MemoryCardOutputSchema = z.object({
 
 export type MemoryCardOutput = z.infer<typeof MemoryCardOutputSchema>;
 
-export async function generateMemoryCard(transcript: string): Promise<MemoryCardOutput> {
+export async function generateMemoryCard_service(transcript: string): Promise<MemoryCardOutput> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not set");

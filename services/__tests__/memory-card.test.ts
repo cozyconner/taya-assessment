@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { generateMemoryCard, MemoryCardOutputSchema } from "../memory-card.service";
+import { generateMemoryCard_service, MemoryCardOutputSchema } from "../memory-card.service";
 
 const mockOpenAIResponse = {
   title: "Team sync",
@@ -70,9 +70,9 @@ describe("memory-card", () => {
     });
   });
 
-  describe("generateMemoryCard", () => {
+  describe("generateMemoryCard_service", () => {
     it("returns parsed output from OpenAI", async () => {
-      const result = await generateMemoryCard("Some transcript from a meeting.");
+      const result = await generateMemoryCard_service("Some transcript from a meeting.");
       expect(result.title).toBe(mockOpenAIResponse.title);
       expect(result.mood).toBe(mockOpenAIResponse.mood);
       expect(result.categories).toEqual(mockOpenAIResponse.categories);
@@ -83,7 +83,7 @@ describe("memory-card", () => {
       const orig = process.env.OPENAI_API_KEY;
       delete process.env.OPENAI_API_KEY;
       await expect(
-        generateMemoryCard("Transcript")
+        generateMemoryCard_service("Transcript")
       ).rejects.toThrow("OPENAI_API_KEY is not set");
       process.env.OPENAI_API_KEY = orig;
     });

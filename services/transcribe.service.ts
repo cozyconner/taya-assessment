@@ -15,7 +15,7 @@ export interface TranscribeResult {
  * @param audioBuffer - Raw audio bytes (e.g. from Blob.arrayBuffer() or multipart)
  * @param mimeType - Optional MIME type (e.g. "audio/webm") for Content-Type
  */
-export async function transcribeAudio(
+export async function transcribeAudio_service(
   audioBuffer: ArrayBuffer,
   mimeType: string = "audio/webm"
 ): Promise<TranscribeResult> {
@@ -52,6 +52,6 @@ export async function transcribeAudio(
 /**
  * Returns true if the transcript is considered too short (silence / no speech).
  */
-export function isTranscriptTooShort(transcript: string): boolean {
+export function isTranscriptTooShort_service(transcript: string): boolean {
   return transcript.length < MIN_TRANSCRIPT_LENGTH;
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateMemoryCard } from "@/services/memory-card.service";
+import { generateMemoryCard_service } from "@/services/memory-card.service";
 import { prisma } from "@/lib/db";
 import type { Mood } from "@prisma/client";
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const generated = await generateMemoryCard(transcript);
+    const generated = await generateMemoryCard_service(transcript);
 
     const card = await prisma.memoryCard.create({
       data: {

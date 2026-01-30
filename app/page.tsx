@@ -1,6 +1,6 @@
 import AudioRecord from "./components/AudioRecord";
 import MemoryCards from "./components/MemoryCards";
-import { getMemoryCards } from "./actions/memory-card.actions";
+import { getMemoryCardsAction } from "./actions/memory-card.actions";
 import type { MemoryCardDisplay } from "@/types/types";
 
 function groupCardsByDate(cards: MemoryCardDisplay[]) {
@@ -62,7 +62,7 @@ function renderStickyHeader() {
 }
 
 export default async function MemoryCardPage() {
-  const memoryCards = await getMemoryCards();
+  const memoryCards = await getMemoryCardsAction();
   const groupedMemoryCards = groupCardsByDate(memoryCards);
 
   return (

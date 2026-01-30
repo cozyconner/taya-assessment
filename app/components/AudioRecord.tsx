@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createMemoryCardFromAudio } from "@/app/actions/memory-card.actions";
+import { createMemoryCardFromAudioAction } from "@/app/actions/memory-card.actions";
 import { cn } from "@/lib/utils";
 import { useGlobalControls } from "@/stores/useGlobalControls";
 import type { AudioRecordState } from "@/types/types";
@@ -199,7 +199,7 @@ export default function AudioRecord() {
           const formData = new FormData();
           formData.set("audio", blob, "recording.webm");
 
-          const result = await createMemoryCardFromAudio(formData);
+          const result = await createMemoryCardFromAudioAction(formData);
 
           if (result.ok) {
             setRecordState("done");

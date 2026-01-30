@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { transcribeAudio, isTranscriptTooShort } from "@/services/transcribe.service";
+import { transcribeAudio_service, isTranscriptTooShort_service } from "@/services/transcribe.service";
 
 const FRIENDLY_SILENCE_MESSAGE = "Couldn't hear audio. Please try again and speak clearly.";
 
@@ -25,9 +25,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const { transcript } = await transcribeAudio(buffer, mimeType);
+    const { transcript } = await transcribeAudio_service(buffer, mimeType);
 
-    if (isTranscriptTooShort(transcript)) {
+    if (isTranscriptTooShort_service(transcript)) {
       return NextResponse.json(
         { error: FRIENDLY_SILENCE_MESSAGE },
         { status: 422 }

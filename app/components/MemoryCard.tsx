@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { deleteMemoryCard } from "@/app/actions/memory-card.actions";
+import { deleteMemoryCardAction } from "@/app/actions/memory-card.actions";
 import MemoryCardTags from "@/app/components/MemoryCardTags";
 import MenuButton from "@/ui/MenuButton";
 import type { MemoryCardDisplay } from "@/types/types";
@@ -40,7 +40,7 @@ export default function MemoryCard({
 
   async function handleDelete() {
     setIsDeleting(true);
-    const result = await deleteMemoryCard(card.id);
+    const result = await deleteMemoryCardAction(card.id);
     setIsDeleting(false);
     setMenuOpen(false);
     if (result.ok) {

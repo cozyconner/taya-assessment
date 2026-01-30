@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { transcribeAudio, isTranscriptTooShort } from "../transcribe.service";
+import { transcribeAudio_service, isTranscriptTooShort_service } from "../transcribe.service";
 
 describe("transcribe", () => {
   beforeEach(() => {
     process.env.DEEPGRAM_API_KEY = "test-key";
   });
 
-  describe("transcribeAudio", () => {
+  describe("transcribeAudio_service", () => {
     it("returns transcript from Deepgram response", async () => {
       const mockTranscript = "Hello, this is a test.";
       const mockFetch = vi.fn().mockResolvedValue({
@@ -24,7 +24,7 @@ describe("transcribe", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const result = await transcribeAudio(new ArrayBuffer(8), "audio/webm");
+      const result = await transcribeAudio_service(new ArrayBuffer(8), "audio/webm");
 
       expect(result.transcript).toBe(mockTranscript);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -46,7 +46,7 @@ describe("transcribe", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const result = await transcribeAudio(new ArrayBuffer(8));
+      const result = await transcribeAudio_service(new ArrayBuffer(8));
 
       expect(result.transcript).toBe("");
     });
@@ -55,7 +55,7 @@ describe("transcribe", () => {
       const key = process.env.DEEPGRAM_API_KEY;
       delete process.env.DEEPGRAM_API_KEY;
 
-      await expect(transcribeAudio(new ArrayBuffer(8))).rejects.toThrow(
+      await expect(transcribeAudio_service(new ArrayBuffer(8))).rejects.toThrow(
         "DEEPGRAM_API_KEY is not set"
       );
 
@@ -63,18 +63,18 @@ describe("transcribe", () => {
     });
   });
 
-  describe("isTranscriptTooShort", () => {
+  describe("isTranscriptTooShort_service", () => {
     it("returns true for empty string", () => {
-      expect(isTranscriptTooShort("")).toBe(true);
+      expect(isTranscriptTooShort_service("")).toBe(true);
     });
 
     it("returns true for single character", () => {
-      expect(isTranscriptTooShort("a")).toBe(true);
+      expect(isTranscriptTooShort_service("a")).toBe(true);
     });
 
     it("returns false for two or more characters", () => {
-      expect(isTranscriptTooShort("ab")).toBe(false);
-      expect(isTranscriptTooShort("Hello world")).toBe(false);
+      expect(isTranscriptTooShort_service("ab")).toBe(false);
+      expect(isTranscriptTooShort_service("Hello world")).toBe(false);
     });
   });
 });

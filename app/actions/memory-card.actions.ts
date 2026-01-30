@@ -1,12 +1,12 @@
 "use server";
 
-import { transcribeAudio, isTranscriptTooShort } from "@/services/transcribe.service";
-import { generateMemoryCard } from "@/services/memory-card.service";
+import { transcribeAudio_service, isTranscriptTooShort_service } from "@/services/transcribe.service";
+import { generateMemoryCard_service } from "@/services/memory-card.service";
 import { prisma } from "@/lib/db";
 import type { Mood } from "@prisma/client";
 import type { MemoryCardDisplay } from "@/types/types";
 
-export async function getMemoryCards(): Promise<MemoryCardDisplay[]> {
+export async function getMemoryCardsAction(): Promise<MemoryCardDisplay[]> {
   const cards = await prisma.memoryCard.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -31,7 +31,7 @@ export type CreateMemoryCardFromAudioResult =
  * Records flow: transcribe audio → generate memory card → persist.
  * Returns the new card or a friendly error (e.g. "Couldn't hear audio...").
  */
-export async function createMemoryCardFromAudio(
+export async function createMemoryCardFromAudioAction(
   formData: FormData
 ): Promise<CreateMemoryCardFromAudioResult> {
   const audio = formData.get("audio");
@@ -47,13 +47,13 @@ export async function createMemoryCardFromAudio(
 
   try {
     const mimeType = audio.type || "audio/webm";
-    const { transcript } = await transcribeAudio(buffer, mimeType);
+    const { transcript } = await transcribeAudio_service(buffer, mimeType);
 
-    if (isTranscriptTooShort(transcript)) {
+    if (isTranscriptTooShort_service(transcript)) {
       return { ok: false, error: "Couldn't hear audio. Please try again and speak clearly." };
     }
 
-    const generated = await generateMemoryCard(transcript);
+    const generated = await generateMemoryCard_service(transcript);
 
     const card = await prisma.memoryCard.create({
       data: {
@@ -85,7 +85,7 @@ export async function createMemoryCardFromAudio(
 
 export type DeleteMemoryCardResult = { ok: true } | { ok: false; error: string };
 
-export async function deleteMemoryCard(id: string): Promise<DeleteMemoryCardResult> {
+export async function deleteMemoryCardAction(id: string): Promise<DeleteMemoryCardResult> {
   try {
     await prisma.memoryCard.delete({ where: { id } });
     return { ok: true };
