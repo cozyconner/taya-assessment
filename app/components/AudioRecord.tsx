@@ -13,7 +13,7 @@ const TEAL = {
 
 /** RMS below this for SILENCE_DURATION_MS = silence detected */
 const RMS_SILENCE_THRESHOLD = 0.01;
-const SILENCE_DURATION_MS = 3000;
+const SILENCE_DURATION_MS = 2000;
 /** Overall average RMS below this = "very quiet" recording (only near-silence) */
 const OVERALL_AVG_LOW_THRESHOLD = 0.002;
 /** RMS above this = "we're hearing you" */
