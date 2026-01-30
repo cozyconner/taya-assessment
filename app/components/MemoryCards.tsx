@@ -37,7 +37,7 @@ export default function MemoryCards({ groupedMemoryCards }: MemoryCardsProps) {
 
   return (
     <>
-      <section className="relative z-0 px-4 pb-12">
+      <section data-id="memoryCardsComponent" className="relative z-0 px-4 pb-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-stone-900">Your moments</h2>

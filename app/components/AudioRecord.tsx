@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMemoryCardFromAudio } from "@/app/actions/memory-card.actions";
+import { cn } from "@/lib/utils";
 import { useGlobalControls } from "@/stores/useGlobalControls";
 import type { AudioRecordState } from "@/types/types";
 
@@ -249,14 +250,16 @@ export default function AudioRecord() {
 
   return (
     <div
-      className={`overflow-hidden transition-all duration-500 ease-out ${isExpanded ? "fixed inset-0 z-20" : "fixed top-0 left-0 right-0 z-20"
-        }`}
+      className={cn(
+        "overflow-hidden transition-all duration-500 ease-out",
+        isExpanded ? "fixed inset-0 z-20" : "fixed top-0 left-0 right-0 z-20"
+      )}
     >
       <div
-        className={`relative flex flex-col items-center justify-center transition-all duration-500 ease-out ${isExpanded
-          ? "min-h-screen bg-[#5eead4]/30 backdrop-blur-md"
-          : "min-h-0 py-8"
-          }`}
+        className={cn(
+          "relative flex flex-col items-center justify-center transition-all duration-500 ease-out",
+          isExpanded ? "min-h-screen bg-[#5eead4]/30 backdrop-blur-md" : "min-h-0 py-8"
+        )}
         style={
           isExpanded
             ? {
@@ -422,6 +425,7 @@ export default function AudioRecord() {
               }}
             >
               <button
+                data-id="audioRecordButton"
                 type="button"
                 onClick={handleToggle}
                 className="relative flex h-16 w-16 items-center justify-center rounded-full bg-teal-500 shadow-md transition-transform hover:scale-105 active:scale-95"
