@@ -13,6 +13,7 @@ A Next.js application that allows users to record audio notes and automatically 
 ## Tech Stack
 
 ### Frontend
+
 - **Framework**: Next.js 16.1.6 (App Router)
 - **UI Library**: React 19.2.3
 - **Language**: TypeScript 5
@@ -20,6 +21,7 @@ A Next.js application that allows users to record audio notes and automatically 
 - **State Management**: Zustand 5.0.10
 
 ### Backend
+
 - **Runtime**: Node.js
 - **Database**: PostgreSQL with Prisma ORM 7.3.0
 - **AI Services**:
@@ -27,6 +29,7 @@ A Next.js application that allows users to record audio notes and automatically 
   - Deepgram (Nova-3) for speech-to-text transcription
 
 ### Development Tools
+
 - **Testing**: Vitest 4.0.18
 - **Linting**: ESLint with Next.js config
 - **Package Manager**: pnpm (recommended)
@@ -38,6 +41,7 @@ This application leverages two AI services to transform audio recordings into st
 ### Deepgram Nova-3 (Speech-to-Text)
 
 **Why Deepgram Nova-3:**
+
 - **Performance**: Low-latency, cost-efficient, high-quality transcription of conversational speech. Handles messy, stream-of-consciousness audio well.
 - **API**: Accepts raw audio bytes via `multipart/form-data`. Much cheaper than OpenAI Whisper with lower latency for pure STT; faster and more future-proof than AssemblyAI.
 - **Route**: `POST /api/transcribe` handles silence and short-audio edge cases server-side, returning a friendly 422 instead of passing low-quality input downstream.
@@ -45,6 +49,7 @@ This application leverages two AI services to transform audio recordings into st
 ### OpenAI GPT-4o-mini (Structured Memory Generation)
 
 **Why GPT-4o-mini:**
+
 - **Performance & cost**: Fast, cost-efficient reasoning and reliable structured output—about 10x cheaper than GPT-4.1.
 - **Output**: Converts unstructured transcripts into schema-validated JSON (titles, categories, action items, inferred mood). Cheaper than Anthropic; more deterministic than Mistral for APIs at scale.
 - **Data integrity**: A strict Zod schema enforces output correctness, so responses are safe to store and render without fragile parsing.
@@ -53,7 +58,7 @@ Together, these services provide a cost-effective, accurate pipeline from raw au
 
 ## Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm (or npm/yarn)
 - PostgreSQL database (or Docker for local development)
 - OpenAI API key
@@ -62,19 +67,22 @@ Together, these services provide a cost-effective, accurate pipeline from raw au
 ## Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd taya-assessment
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Set up environment variables**
-   
+
    Create a `.env` file in the root directory:
+
    ```env
    DATABASE_URL="postgresql://user:password@localhost:5434/taya"
    OPENAI_API_KEY="your-openai-api-key"
@@ -83,27 +91,31 @@ Together, these services provide a cost-effective, accurate pipeline from raw au
    ```
 
 4. **Set up the database**
-   
+
    Start PostgreSQL using Docker:
+
    ```bash
    pnpm db:up
    ```
-   
+
    Run Prisma migrations:
+
    ```bash
    pnpm prisma migrate dev
    ```
-   
+
    (Optional) Open Prisma Studio to view the database:
+
    ```bash
    pnpm db:studio
    ```
 
 5. **Run the development server**
+
    ```bash
    pnpm dev
    ```
-   
+
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Available Scripts
@@ -215,6 +227,7 @@ pnpm test
 ```
 
 Tests are located in `services/__tests__/` and cover:
+
 - Memory card generation service
 - Transcription service
 - Schema validation
